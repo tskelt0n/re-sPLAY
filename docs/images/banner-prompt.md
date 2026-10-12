@@ -38,3 +38,6 @@ Make two precise corrections to this existing banner while preserving everything
 All displays remain active, readings stay 45%, 60%, 45%. Preserve all promotional text, backdrop, window placement, card geometry, all other controls, both Studio Auto brightness switches, and the center ASUS blue monitor graphic. No new elements.
 ```
 
+## Brand symbol
+
+The banner now includes the standalone re-sPLAY symbol. See [brand artwork and prompts](../brand/README.md) for the final symbol generation and integration instructions.
