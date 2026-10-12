@@ -1,5 +1,7 @@
 # re-sPLAY
 
+[![re-sPLAY — Your displays. Your choice. App preview showing ASUS-only mode, per-display brightness, and keyboard shortcuts.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
+
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
 Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.7.2**.
