@@ -1,6 +1,6 @@
 # re-sPLAY
 
-[![re-sPLAY — Your displays. Your choice. Preview of version 0.8.4 with all three displays active and individual brightness controls.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
+[![re-sPLAY — Your displays. Your choice. Preview of version 0.8.12 with three active displays, the selected ASUS monitor glow and badge, individual brightness controls, and clear action buttons.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
@@ -22,7 +22,7 @@ Display disconnection requests standby; it does not cut AC power. Actual standby
 
 ## Preview
 
-The promotional banner shows version 0.8.4; the dark and collapsed app captures show version 0.8.12, including the selected-monitor badge and higher-contrast action buttons. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
+The promotional banner reflects version 0.8.12, including the selected-monitor glow and badge, seamless window backgrounds, and higher-contrast action buttons. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
 
 Quick Controls keeps display switching and brightness in the menu bar:
 
