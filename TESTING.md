@@ -96,6 +96,14 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - In the installed app, selected Studio Display (1), visually confirmed that only its glow and badge appeared, then restored ASUS and verified the selected state moved back. All three displays stayed active with brightness unchanged. Checked the collapsed sidebar layout and refreshed both dark preview captures.
 - Build, shell syntax, installed strict signature verification, ZIP integrity, and whitespace checks passed. Menu-popover rendering, light appearance, disconnected selection, and hardware switching were not retested in this visual pass.
 
+## Version 0.8.11 monitor selection motion
+
+- Added a 0.28-second smooth animation to the selected screen-edge glow and badge. The badge fades with a subtle 4-point lift and 0.94-to-1 scale; the glow crossfades independently of monitor layout and wallpaper.
+- Kept selection decorations mounted so a new selection can retarget an in-flight animation. Animation values depend only on the preferred flag, avoiding repeated motion from status or brightness polling.
+- Reduce Motion uses a 0.12-second opacity fade with no translation or scale. The system setting was not changed during this check.
+- Built and installed the update; clicked Studio Display (1), Studio Display (2), and ASUS in turn. Verified selection accessibility values and the settled rendering, then left ASUS selected. No brightness or connection controls were operated. Automated captures verify the final state, not perceived motion smoothness or rapid interruption behavior.
+- Compilation, shell syntax, strict installed signature verification, ZIP integrity, and whitespace checks passed. Existing 0.8.10 screenshots remain representative of the settled design.
+
 ## Build checks
 
 ```sh

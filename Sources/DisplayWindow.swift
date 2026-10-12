@@ -407,6 +407,10 @@ struct DisplayPanel: View {
 // They never capture the user's screen or imply live window previews.
 struct DisplayIllustration: View {
     let display: DisplayItem
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var selectionAnimation: Animation {
+        reduceMotion ? .easeOut(duration: 0.12) : .smooth(duration: 0.28, extraBounce: 0)
+    }
     private static let wallpaper = Bundle.main.url(forResource: "DisplayWallpaper", withExtension: "png").flatMap { NSImage(contentsOf: $0) }
     var body: some View {
         GeometryReader { geometry in
@@ -434,19 +438,29 @@ struct DisplayIllustration: View {
                 }.frame(width: width, height: screenHeight)
                     .overlay {
                         RoundedRectangle(cornerRadius: 8)
-                            .strokeBorder(display.preferred ? brandAccent : Color.gray.opacity(display.active ? 0.65 : 0.4), lineWidth: display.preferred ? 2 : 1)
-                            .shadow(color: display.preferred ? brandAccent.opacity(0.65) : .clear, radius: 5)
-                            .shadow(color: display.preferred ? brandAccent.opacity(0.3) : .clear, radius: 13)
+                            .strokeBorder(Color.gray.opacity(display.active ? 0.65 : 0.4), lineWidth: 1)
+                    }
+                    .overlay {
+                        // Keep the ring mounted so rapid selections smoothly retarget its opacity.
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(brandAccent, lineWidth: 2)
+                            .shadow(color: brandAccent.opacity(0.65), radius: 5)
+                            .shadow(color: brandAccent.opacity(0.3), radius: 13)
+                            .opacity(display.preferred ? 1 : 0)
+                            .animation(selectionAnimation, value: display.preferred)
                     }
                     .overlay(alignment: .top) {
-                        if display.preferred {
-                            Label("Selected", systemImage: "checkmark")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 11).padding(.vertical, 5)
-                                .background(brandAccent, in: Capsule())
-                                .offset(y: -12)
-                        }
+                        Label("Selected", systemImage: "checkmark")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 11).padding(.vertical, 5)
+                            .background(brandAccent, in: Capsule())
+                            .scaleEffect(reduceMotion || display.preferred ? 1 : 0.94)
+                            .opacity(display.preferred ? 1 : 0)
+                            .offset(y: reduceMotion || display.preferred ? -12 : -8)
+                            // Scope motion to this decoration, never layout or brightness polling.
+                            .animation(selectionAnimation, value: display.preferred)
+                            .allowsHitTesting(false)
                     }
                 if display.builtin {
                     RoundedRectangle(cornerRadius: 3).fill(LinearGradient(colors: [.gray, Color(white: 0.8), .gray], startPoint: .top, endPoint: .bottom))
