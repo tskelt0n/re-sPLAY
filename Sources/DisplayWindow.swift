@@ -107,8 +107,9 @@ struct DisplayWindow: View {
                             .contentShape(Rectangle())
                             .background {
                                 if model.section == section {
-                                    UnevenRoundedRectangle(topLeadingRadius: 10, bottomLeadingRadius: 10)
+                                    ConnectedSidebarTab()
                                         .fill(Color(nsColor: .windowBackgroundColor))
+                                        .padding(.vertical, -ConnectedSidebarTab.joinRadius)
                                 }
                             }
                         }
@@ -248,6 +249,34 @@ struct DisplayWindow: View {
                     }.padding(12)
                 }
             }.padding(32).frame(maxWidth: 820).frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+// The right-hand curves extend beyond the row into the sidebar, making rounded
+// inside corners where the tab flows into the detail pane without leaving a gap.
+private struct ConnectedSidebarTab: Shape {
+    static let joinRadius: CGFloat = 18
+    func path(in rect: CGRect) -> Path {
+        let r = Self.joinRadius
+        let left: CGFloat = 12
+        let k: CGFloat = 0.55228475
+        let w = rect.width
+        let h = rect.height
+        return Path { path in
+            path.move(to: CGPoint(x: 0, y: r + left))
+            path.addQuadCurve(to: CGPoint(x: left, y: r), control: CGPoint(x: 0, y: r))
+            path.addLine(to: CGPoint(x: w - r, y: r))
+            path.addCurve(to: CGPoint(x: w, y: 0),
+                          control1: CGPoint(x: w - r + k * r, y: r),
+                          control2: CGPoint(x: w, y: k * r))
+            path.addLine(to: CGPoint(x: w, y: h))
+            path.addCurve(to: CGPoint(x: w - r, y: h - r),
+                          control1: CGPoint(x: w, y: h - k * r),
+                          control2: CGPoint(x: w - r + k * r, y: h - r))
+            path.addLine(to: CGPoint(x: left, y: h - r))
+            path.addQuadCurve(to: CGPoint(x: 0, y: h - r - left), control: CGPoint(x: 0, y: h - r))
+            path.closeSubpath()
         }
     }
 }

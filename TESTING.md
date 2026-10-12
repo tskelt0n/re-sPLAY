@@ -76,6 +76,12 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Visually confirmed the selected Displays tab joins the main pane and saved an updated capture. Settings inspection again encountered the known Codex native inspection-service failure; its rendered selection and keyboard navigation were not independently verified in this pass.
 - Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. No display settings were changed.
 
+## Version 0.8.8 sidebar corner refinement
+
+- Added 18-point concave joins above and below the selected tab where it meets the detail pane, with 12-point outer corners on the left. Decorative curves extend beyond the row without changing its layout or click target.
+- Visually inspected the installed Displays selection and saved the updated screenshot. The selected background remains flush and uses the same semantic color as the main pane.
+- Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. Navigation behavior and display settings are unchanged.
+
 ## Build checks
 
 ```sh

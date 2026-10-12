@@ -4,7 +4,7 @@
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
-Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.7**.
+Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.8**.
 
 ## Features
 
@@ -22,7 +22,7 @@ Display disconnection requests standby; it does not cut AC power. Actual standby
 
 ## Preview
 
-The promotional banner shows version 0.8.4; the dark app capture includes the connected sidebar selection introduced in 0.8.7. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
+The promotional banner shows version 0.8.4; the dark app capture includes the curved sidebar selection refined in 0.8.8. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
 
 Quick Controls keeps display switching and brightness in the menu bar:
 
