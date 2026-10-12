@@ -34,6 +34,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - The popover now resolves its hosted content size before positioning instead of starting with a stale fixed height. Opening it no longer calls application-wide activation, and reopening is ignored while the popover is shown. Its gear button selects the internal Settings tab.
 - Build and installed strict signature verification passed. The user physically confirmed that the panel sits directly beneath the menu-bar icon and opens without reopening the closed main window.
 
+## Version 0.8.2 responsive layout
+
+- Replaced the adaptive column template with an explicit count capped at the number of displays, eliminating the empty fourth slot at the sidebar-collapse breakpoint.
+- Preview height now follows column width and device aspect ratio; column spacing also grows with the available width. Single-display panels are capped at a readable width.
+- Inspected installed app screenshots with the sidebar open and closed at the same 1120-point window width: all three displays fill the row, and monitor preview width grows from approximately 264 to 322 points after collapsing the sidebar. Controls remain visible and aligned, and the sidebar button stays fixed.
+- Compilation, installed signature verification, archive integrity, and whitespace checks passed. Hardware settings were unchanged. Minimum-width rendering was not verified: the automated resize gesture did not resize the window.
+
 ## Build checks
 
 ```sh

@@ -117,37 +117,49 @@ struct DisplayWindow: View {
     }
 
     private var displayPage: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Displays").font(.system(size: 32, weight: .bold))
-                        Text("Choose the screens you want to use.").font(.system(size: 16)).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Text("\(model.activeCount) of \(model.displays.count) active")
-                        .font(.system(size: 13)).foregroundStyle(.secondary).padding(.top, 10)
-                }
-                DisplaySetupPicker(model: model)
-                if model.displays.isEmpty {
-                    ContentUnavailableView("No displays found", systemImage: "display", description: Text("Connect a display to get started."))
-                } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 28)], alignment: .center, spacing: 32) {
-                        ForEach(model.displays) { display in
-                            DisplayPanel(model: model, display: display)
+        GeometryReader { geometry in
+            let contentWidth = max(1, min(geometry.size.width, 1300) - 64)
+            let columnSpacing = min(40, max(24, contentWidth * 0.03))
+            // Cap capacity at the actual display count so extra width never creates an empty column.
+            let capacity = max(1, Int((contentWidth + columnSpacing) / (220 + columnSpacing)))
+            let columnCount = max(1, min(model.displays.count, capacity))
+            let columnWidth = (contentWidth - columnSpacing * CGFloat(columnCount - 1)) / CGFloat(columnCount)
+            let previewWidth = max(1, min(columnWidth, 420) - 8)
+            let previewHeight = model.displays.map {
+                previewWidth * ($0.builtin ? 0.61 : 0.56) + ($0.builtin ? 8 : 31)
+            }.max() ?? 184
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Displays").font(.system(size: 32, weight: .bold))
+                            Text("Choose the screens you want to use.").font(.system(size: 16)).foregroundStyle(.secondary)
                         }
-                    }.padding(.vertical, 12)
-                }
-                Divider()
-                HStack(spacing: 12) {
-                    Image(systemName: "display.2").font(.system(size: 18)).foregroundStyle(.secondary)
-                    Text(model.activeDescription).font(.system(size: 14)).foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Restore all", action: model.restore)
-                        .buttonStyle(.borderedProminent).controlSize(.large)
-                        .help("Reconnect displays disabled by re-sPLAY (⌃⌥⌘0)")
-                }
-            }.padding(32).frame(maxWidth: 1300).frame(maxWidth: .infinity)
+                        Spacer()
+                        Text("\(model.activeCount) of \(model.displays.count) active")
+                            .font(.system(size: 13)).foregroundStyle(.secondary).padding(.top, 10)
+                    }
+                    DisplaySetupPicker(model: model)
+                    if model.displays.isEmpty {
+                        ContentUnavailableView("No displays found", systemImage: "display", description: Text("Connect a display to get started."))
+                    } else {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: columnSpacing), count: columnCount), alignment: .center, spacing: 32) {
+                            ForEach(model.displays) { display in
+                                DisplayPanel(model: model, display: display, previewHeight: previewHeight)
+                            }
+                        }.padding(.vertical, 12)
+                    }
+                    Divider()
+                    HStack(spacing: 12) {
+                        Image(systemName: "display.2").font(.system(size: 18)).foregroundStyle(.secondary)
+                        Text(model.activeDescription).font(.system(size: 14)).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Restore all", action: model.restore)
+                            .buttonStyle(.borderedProminent).controlSize(.large)
+                            .help("Reconnect displays disabled by re-sPLAY (⌃⌥⌘0)")
+                    }
+                }.padding(32).frame(maxWidth: 1300).frame(maxWidth: .infinity)
+            }
         }
     }
 
@@ -201,10 +213,11 @@ struct DisplaySetupPicker: View {
 struct DisplayPanel: View {
     @ObservedObject var model: DisplayWindowModel
     let display: DisplayItem
+    let previewHeight: CGFloat
     @State private var showInfo = false
     var body: some View {
         VStack(spacing: 14) {
-            DisplayIllustration(display: display).frame(height: 184)
+            DisplayIllustration(display: display).frame(height: previewHeight)
             HStack(spacing: 5) {
                 Spacer(minLength: 0)
                 Text(display.name).font(.system(size: 16, weight: .semibold)).lineLimit(2).multilineTextAlignment(.center)
@@ -224,7 +237,7 @@ struct DisplayPanel: View {
                     .accessibilityLabel("Use only \(display.name)")
                 PreferenceButton(model: model, display: display)
             }
-        }.padding(.vertical, 6)
+        }.frame(maxWidth: 420).padding(.vertical, 6)
     }
 }
 
@@ -237,7 +250,7 @@ struct DisplayIllustration: View {
         GeometryReader { geometry in
             let aspect = display.builtin ? 0.61 : 0.56
             let baseHeight = display.builtin ? 8.0 : 31.0
-            let width = min(geometry.size.width - 8, 310.0, (geometry.size.height - baseHeight) / aspect)
+            let width = min(geometry.size.width - 8, (geometry.size.height - baseHeight) / aspect)
             let screenHeight = width * (display.builtin ? 0.61 : 0.56)
             VStack(spacing: 0) {
                 ZStack(alignment: .top) {
