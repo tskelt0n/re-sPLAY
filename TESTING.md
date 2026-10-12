@@ -104,6 +104,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Built and installed the update; clicked Studio Display (1), Studio Display (2), and ASUS in turn. Verified selection accessibility values and the settled rendering, then left ASUS selected. No brightness or connection controls were operated. Automated captures verify the final state, not perceived motion smoothness or rapid interruption behavior.
 - Compilation, shell syntax, strict installed signature verification, ZIP integrity, and whitespace checks passed. Existing 0.8.10 screenshots remain representative of the settled design.
 
+## Version 0.8.12 action button visibility
+
+- Replaced the faint tinted Use only this buttons with a shared 34-point-high action style: primary text, a solid neutral surface, and a visible border in light and dark appearances. The main window and expanded menu-bar controls share the style.
+- Hover brightens the surface and adds a purple border and soft shadow over 0.16 seconds. Pressing darkens the surface and adds a small compression; Reduce Motion removes compression. Disabled controls suppress hover/press emphasis, and Increase Contrast strengthens the resting border.
+- Inspected the installed dark main window with its sidebar expanded and collapsed; labels and button boundaries are clear and fit within each display's centered controls. Saved updated screenshots. No display switching or brightness actions were triggered.
+- Build, shell syntax, strict installed signature verification, ZIP integrity, and whitespace checks passed. Hover/pressed motion, disabled appearance, light mode, accessibility appearance settings, and the menu-bar rendering were not visually exercised; native automation has no pointer-hover operation.
+
 ## Build checks
 
 ```sh

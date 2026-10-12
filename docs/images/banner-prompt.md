@@ -6,8 +6,8 @@ Updated October 12, 2026 using the built-in image-generation tool, with the real
 
 ## Source assets
 
-- `app-dark.png`: unedited 0.8.10 main window with a selected-monitor glow and badge (updated after banner generation).
-- `sidebar-collapsed.png`: unedited 0.8.10 main window with sidebar collapsed (updated after banner generation).
+- `app-dark.png`: unedited 0.8.12 main window with a selected-monitor glow, badge, and higher-contrast action buttons (updated after banner generation).
+- `sidebar-collapsed.png`: unedited 0.8.12 main window with sidebar collapsed (updated after banner generation).
 - `app-light.png`: earlier 0.8.0 light appearance capture.
 - `quick-controls.png`: earlier 0.8.0 light menu-bar popover capture.
 - `../brand/re-splay-symbol.png`: authoritative purple return-frame symbol.

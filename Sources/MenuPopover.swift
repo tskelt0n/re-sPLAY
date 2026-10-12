@@ -103,7 +103,7 @@ private struct PopoverDisplayRow: View {
                 if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
                 HStack {
                     Button("Use only this") { model.useOnly(display.id) }
-                        .buttonStyle(.bordered).disabled(model.busy || !display.available || model.isOnlyActive(display))
+                        .buttonStyle(DisplayActionButtonStyle()).disabled(model.busy || !display.available || model.isOnlyActive(display))
                         .accessibilityLabel("Use only \(display.name)")
                     Spacer()
                     PreferenceButton(model: model, display: display)

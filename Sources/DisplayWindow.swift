@@ -395,11 +395,56 @@ struct DisplayPanel: View {
                 if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
                 else { Color.clear.frame(height: 24).accessibilityHidden(true) }
                 Button("Use only this") { model.useOnly(display.id) }
-                    .buttonStyle(.bordered).frame(maxWidth: .infinity)
+                    .buttonStyle(DisplayActionButtonStyle()).frame(maxWidth: .infinity)
                     .disabled(model.busy || !display.available || model.isOnlyActive(display))
                     .accessibilityLabel("Use only \(display.name)")
             }.frame(maxWidth: 260).padding(.horizontal, 18)
         }.frame(maxWidth: 420).padding(.vertical, 6)
+    }
+}
+
+// Shared action treatment for the main window and expanded menu-bar controls.
+struct DisplayActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        ActionSurface(configuration: configuration)
+    }
+
+    private struct ActionSurface: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.colorScheme) private var colorScheme
+        @Environment(\.colorSchemeContrast) private var contrast
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var isHovered = false
+
+        private var highlighted: Bool { isEnabled && isHovered }
+        private var pressed: Bool { isEnabled && configuration.isPressed }
+        private var fill: Color {
+            if colorScheme == .dark {
+                return Color(white: pressed ? 0.18 : highlighted ? 0.29 : 0.22)
+            }
+            return Color(white: pressed ? 0.80 : highlighted ? 0.87 : 0.94)
+        }
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isEnabled ? Color.primary : Color.secondary)
+                .padding(.horizontal, 16)
+                .frame(minWidth: 132, minHeight: 34)
+                .background(fill, in: RoundedRectangle(cornerRadius: 9))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 9)
+                        .strokeBorder(highlighted ? brandAccent.opacity(0.85) : Color.primary.opacity(contrast == .increased ? 0.5 : 0.18), lineWidth: 1)
+                }
+                .shadow(color: highlighted ? brandAccent.opacity(0.16) : .clear, radius: 7, y: 1)
+                .opacity(isEnabled ? 1 : 0.5)
+                .scaleEffect(pressed && !reduceMotion ? 0.98 : 1)
+                .contentShape(RoundedRectangle(cornerRadius: 9))
+                .onHover { isHovered = $0 }
+                .animation(.easeOut(duration: reduceMotion ? 0.1 : 0.16), value: highlighted)
+                .animation(.easeOut(duration: 0.10), value: pressed)
+        }
     }
 }
 
