@@ -45,8 +45,15 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 
 - Centered each monitor's name and controls in a group capped at 260 points, with horizontal insets. Monitor illustration geometry and responsive preview sizing are unchanged.
 - Gave the display-setup segmented control an explicit width based on its segment count, removing reliance on fluctuating intrinsic widths during view refreshes.
-- Inspected both sidebar states in the installed app and compared the collapsed layout again after multiple refresh cycles. The four-tab control remained 384 points wide; monitor previews retained their previous sizes while the controls were visibly separated.
+- Inspected both sidebar states in the installed app and compared the collapsed layout again after multiple refresh cycles. The sampled captures appeared stable, but the user subsequently reproduced internal segment resizing in 0.8.3. The outer frame alone was insufficient. Monitor previews retained their previous sizes while the controls were visibly separated.
 - Build, installed strict signature verification, archive integrity, and whitespace checks passed. No display brightness or connection settings were changed.
+
+## Version 0.8.4 native segment sizing
+
+- Replaced the SwiftUI display-setup Picker with an AppKit segmented control that assigns 96 points to each segment and uses fixed distribution. The surrounding frame includes its border inset.
+- Reconfigure labels and widths only when available options change; normal model refreshes update selection and enabled state without rebuilding segments.
+- Compared installed app captures across a 25-second interval: segment boundaries and the control's origin remained unchanged. Inspected both sidebar states and the menu-bar control. Clicking All displays confirmed the native action invokes restoration and disables segments during the transition.
+- Retained the capsule appearance and purple selection. Control spacing and monitor artwork are unchanged. Compilation and installed signature verification passed.
 
 ## Build checks
 

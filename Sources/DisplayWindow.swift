@@ -195,23 +195,73 @@ struct DisplaySetupPicker: View {
         if model.activeCount == 1 { return model.displays.first(where: \.active)?.id ?? "" }
         return model.activeCount == model.displays.count ? "all" : "custom"
     }
-    private var segmentCount: Int {
-        1 + model.displays.filter(\.available).count + (selected == "custom" ? 1 : 0)
+    private var options: [SetupSegment] {
+        var items = [SetupSegment(id: "all", label: "All displays")]
+        items += model.displays.filter(\.available).map { SetupSegment(id: $0.id, label: $0.shortName) }
+        if selected == "custom" { items.append(SetupSegment(id: "custom", label: "Custom")) }
+        return items
     }
     var body: some View {
-        Picker("Display setup", selection: Binding(get: { selected }, set: { value in
+        FixedSetupSegments(options: options, selected: selected,
+                           enabled: !model.busy && !model.displays.isEmpty) { value in
             if value == "all" { model.restore() }
             else if model.displays.contains(where: { $0.id == value && $0.available }) { model.useOnly(value) }
-        })) {
-            Text("All displays").tag("all")
-            ForEach(model.displays.filter(\.available)) { Text($0.shortName).tag($0.id) }
-            if selected == "custom" { Text("Custom").tag("custom") }
-        }.pickerStyle(.segmented).labelsHidden().controlSize(.large)
-            // Avoid intrinsic-size changes as the native segmented control refreshes.
-            .frame(width: CGFloat(segmentCount) * 96)
-            .disabled(model.busy || model.displays.isEmpty)
-            .accessibilityLabel("Display setup")
-            .help("Use all displays or switch to a single display")
+        }
+        .frame(width: CGFloat(options.count) * 96 + 4, height: 28)
+    }
+}
+
+private struct SetupSegment: Equatable {
+    let id: String
+    let label: String
+}
+
+// Own the native segment widths rather than relying on SwiftUI Picker's alternating
+// intrinsic/fill layout. Brightness polling can update selection without rebuilding segments.
+private struct FixedSetupSegments: NSViewRepresentable {
+    let options: [SetupSegment]
+    let selected: String
+    let enabled: Bool
+    let choose: (String) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeNSView(context: Context) -> NSSegmentedControl {
+        let control = NSSegmentedControl()
+        control.controlSize = .large
+        control.segmentStyle = .automatic
+        control.borderShape = .capsule
+        control.segmentDistribution = .fit
+        control.trackingMode = .selectOne
+        control.font = .systemFont(ofSize: 13)
+        control.selectedSegmentBezelColor = BrandArtwork.accent
+        control.setAccessibilityLabel("Display setup")
+        control.toolTip = "Use all displays or switch to a single display"
+        control.target = context.coordinator
+        control.action = #selector(Coordinator.selectSegment(_:))
+        return control
+    }
+    func updateNSView(_ control: NSSegmentedControl, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.choose = choose
+        if coordinator.options != options {
+            coordinator.options = options
+            control.segmentCount = options.count
+            for (index, option) in options.enumerated() {
+                control.setLabel(option.label, forSegment: index)
+                control.setWidth(96, forSegment: index)
+            }
+        }
+        let index = options.firstIndex(where: { $0.id == selected }) ?? -1
+        if control.selectedSegment != index { control.selectedSegment = index }
+        if control.isEnabled != enabled { control.isEnabled = enabled }
+    }
+    final class Coordinator: NSObject {
+        var options: [SetupSegment] = []
+        var choose: (String) -> Void = { _ in }
+        @objc func selectSegment(_ sender: NSSegmentedControl) {
+            guard sender.isEnabled, options.indices.contains(sender.selectedSegment) else { return }
+            choose(options[sender.selectedSegment].id)
+        }
     }
 }
 
