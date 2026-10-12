@@ -195,6 +195,9 @@ struct DisplaySetupPicker: View {
         if model.activeCount == 1 { return model.displays.first(where: \.active)?.id ?? "" }
         return model.activeCount == model.displays.count ? "all" : "custom"
     }
+    private var segmentCount: Int {
+        1 + model.displays.filter(\.available).count + (selected == "custom" ? 1 : 0)
+    }
     var body: some View {
         Picker("Display setup", selection: Binding(get: { selected }, set: { value in
             if value == "all" { model.restore() }
@@ -204,6 +207,8 @@ struct DisplaySetupPicker: View {
             ForEach(model.displays.filter(\.available)) { Text($0.shortName).tag($0.id) }
             if selected == "custom" { Text("Custom").tag("custom") }
         }.pickerStyle(.segmented).labelsHidden().controlSize(.large)
+            // Avoid intrinsic-size changes as the native segmented control refreshes.
+            .frame(width: CGFloat(segmentCount) * 96)
             .disabled(model.busy || model.displays.isEmpty)
             .accessibilityLabel("Display setup")
             .help("Use all displays or switch to a single display")
@@ -218,25 +223,27 @@ struct DisplayPanel: View {
     var body: some View {
         VStack(spacing: 14) {
             DisplayIllustration(display: display).frame(height: previewHeight)
-            HStack(spacing: 5) {
-                Spacer(minLength: 0)
-                Text(display.name).font(.system(size: 16, weight: .semibold)).lineLimit(2).multilineTextAlignment(.center)
-                Button { showInfo.toggle() } label: { Image(systemName: "info.circle").foregroundStyle(.secondary) }
-                    .buttonStyle(.plain).help("Display details").accessibilityLabel("About \(display.name)")
-                    .popover(isPresented: $showInfo) { DisplayDetails(model: model, display: display) }
-                Spacer(minLength: 0)
-            }.frame(minHeight: 28)
-            ConnectionToggle(model: model, display: display)
-            BrightnessControl(model: model, display: display)
-            if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
-            else { Color.clear.frame(height: 24).accessibilityHidden(true) }
-            HStack(spacing: 10) {
-                Button("Use only this") { model.useOnly(display.id) }
-                    .buttonStyle(.bordered).frame(maxWidth: .infinity)
-                    .disabled(model.busy || !display.available || model.isOnlyActive(display))
-                    .accessibilityLabel("Use only \(display.name)")
-                PreferenceButton(model: model, display: display)
-            }
+            VStack(spacing: 14) {
+                HStack(spacing: 5) {
+                    Spacer(minLength: 0)
+                    Text(display.name).font(.system(size: 16, weight: .semibold)).lineLimit(2).multilineTextAlignment(.center)
+                    Button { showInfo.toggle() } label: { Image(systemName: "info.circle").foregroundStyle(.secondary) }
+                        .buttonStyle(.plain).help("Display details").accessibilityLabel("About \(display.name)")
+                        .popover(isPresented: $showInfo) { DisplayDetails(model: model, display: display) }
+                    Spacer(minLength: 0)
+                }.frame(minHeight: 28)
+                ConnectionToggle(model: model, display: display)
+                BrightnessControl(model: model, display: display)
+                if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
+                else { Color.clear.frame(height: 24).accessibilityHidden(true) }
+                HStack(spacing: 10) {
+                    Button("Use only this") { model.useOnly(display.id) }
+                        .buttonStyle(.bordered).frame(maxWidth: .infinity)
+                        .disabled(model.busy || !display.available || model.isOnlyActive(display))
+                        .accessibilityLabel("Use only \(display.name)")
+                    PreferenceButton(model: model, display: display)
+                }
+            }.frame(maxWidth: 260).padding(.horizontal, 18)
         }.frame(maxWidth: 420).padding(.vertical, 6)
     }
 }

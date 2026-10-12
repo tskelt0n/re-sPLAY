@@ -2,8 +2,8 @@
 
 The previews were captured from the installed native app on October 12, 2026:
 
-- `readme-banner.png`: version 0.8.2 main window in the system's dark appearance, with a hidden title and a fixed sidebar toggle.
-- `sidebar-collapsed.png`: version 0.8.2 at the same window size with the sidebar collapsed, showing larger previews and full-width columns.
+- `readme-banner.png`: version 0.8.3 main window in the system's dark appearance, with a hidden title and a fixed sidebar toggle.
+- `sidebar-collapsed.png`: version 0.8.3 at the same window size with the sidebar collapsed, showing larger previews and full-width columns.
 - `app-light.png`: version 0.8.0 main window using the app's temporary light-appearance preview flag.
 - `quick-controls.png`: the version 0.8.0 menu-bar popover in light appearance.
 

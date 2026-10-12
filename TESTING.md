@@ -41,6 +41,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Inspected installed app screenshots with the sidebar open and closed at the same 1120-point window width: all three displays fill the row, and monitor preview width grows from approximately 264 to 322 points after collapsing the sidebar. Controls remain visible and aligned, and the sidebar button stays fixed.
 - Compilation, installed signature verification, archive integrity, and whitespace checks passed. Hardware settings were unchanged. Minimum-width rendering was not verified: the automated resize gesture did not resize the window.
 
+## Version 0.8.3 control spacing and stable tabs
+
+- Centered each monitor's name and controls in a group capped at 260 points, with horizontal insets. Monitor illustration geometry and responsive preview sizing are unchanged.
+- Gave the display-setup segmented control an explicit width based on its segment count, removing reliance on fluctuating intrinsic widths during view refreshes.
+- Inspected both sidebar states in the installed app and compared the collapsed layout again after multiple refresh cycles. The four-tab control remained 384 points wide; monitor previews retained their previous sizes while the controls were visibly separated.
+- Build, installed strict signature verification, archive integrity, and whitespace checks passed. No display brightness or connection settings were changed.
+
 ## Build checks
 
 ```sh
