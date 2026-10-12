@@ -1,26 +1,30 @@
 # re-sPLAY symbol
 
-The mark combines two offset display frames with an S-like path between them. It connects the product's display-switching purpose to a standalone symbol, using the application's blue accent.
+The logo depicts a familiar three-monitor workstation: a front-facing center display and two side displays angled inward. Simple blue outlines, minimal stands, and darker outside edges convey perspective and depth.
 
-- `re-splay-symbol.png`: blue symbol on a white background, suitable for identity previews.
-- `../images/readme-banner.png`: dark promotional composition with the symbol above the wordmark.
-- These are raster artwork assets. The app's packaged icon and menu-bar symbol have not been replaced in this change.
-- Keep the two frames together, preserve their proportions and openings, and leave clear space around the mark.
+- `re-splay-symbol.png`: standalone three-monitor symbol on a white background.
+- `../images/readme-banner.png`: the same mark integrated into the dark promotional banner.
+- These are raster artwork assets. This update does not change the packaged app icon or menu-bar symbol.
+- Preserve all three screens, their perspective, and their spacing. Leave clear space around the complete mark.
 
 Created with the built-in image-generation tool on October 12, 2026.
 
 ## Symbol generation prompt
 
 ```text
-Design a single exceptional minimalist technology logo. Brand: re-sPLAY, a Mac display switching utility. Deliver a crisp, presentation-ready logo symbol, not a logo board.
-The mark is a compact S monogram constructed from TWO offset, open rectangular display frames. Rounded rectangular geometry, straight horizontal and vertical lines, consistent bold thickness. One top frame offset slightly right, one bottom frame offset slightly left; their openings combine into an elegant S-shaped switching path. Only TWO frames. A coherent simple silhouette. Sophisticated editorial restraint, like a carefully drawn independent Mac software identity, but original. No arrows, power signs, triangles, monitor stands, cables or tiny details.
-One solid vibrant blue #079BFF on a perfectly solid white #FFFFFF background. Absolutely flat vector-like artwork: uniform fill, crisp smooth contours, no gradient, texture, shadow, perspective, glow, or distressed pixels. Square image. Symbol centered with generous 25% outer margins. No lettering, no wordmark, no text, no captions, no watermarks, no app icon container.
+Use case: logo-brand.
+Design a premium minimal logo symbol for re-sPLAY, a macOS display control app.
+Subject: a familiar THREE-MONITOR DESKTOP SETUP, distilled into simple bold shapes and lines. Exactly three landscape screens in one horizontal row, symmetrically arranged. Center screen front-facing, left and right screens turned inward toward the viewer's seating position, forming a subtle wraparound workstation. Side screens are trapezoidal in perspective, with their inner edges farther back and their outer edges slightly closer to the viewer. Use perspective and a small visible edge thickness to convey three-dimensional depth without photorealistic rendering. Three clearly separated screens, equal visual importance, no overlap hiding a screen.
+Visual style: beautifully proportioned geometric outline mark. Simple blue frames around empty white screen interiors, gently rounded corners, clean consistent bold line weights, restrained minimal short stems/feet so it reads immediately as three monitors. Center stand can be a minimal T-shaped base. Side stands must follow their screen perspective. Compact cohesive silhouette, approximately 2.2:1 wide to tall, readable at small sizes.
+Color: electric blue #079BFF, with at most a darker blue edge line on each screen to suggest thickness. White background. Flat graphic design; depth comes from geometry only. No gradients, gloss, textures, glow, lighting effects, shadows or realistic materials. No letters, words, arrows, power glyphs, S monogram, cables, desk, keyboard, abstract interlocking shapes or app-icon container.
+Composition: one centered logo on square white canvas, generous balanced margins. Crisp vector-like edges, precise symmetry, polished original identity suitable for a macOS app and GitHub README. Deliver one symbol only.
 ```
 
 ## Banner integration prompt
 
 ```text
-Use image 1 as the exact banner edit target. Image 2 is the new re-sPLAY logo symbol to insert.
-Make just one addition: place the blue symbol from image 2 above the large left-hand "re-sPLAY" wordmark, in the available dark space. The visible mark should be approximately 130 pixels wide and 130 pixels high in this 1672x941 banner, left aligned to the wordmark at x approximately 72, top y approximately 125. Preserve the logo's exact TWO offset open display-frame shapes, their gaps, relative proportions, solid blue color, and S-like arrangement. Remove its white rectangular background completely: only the blue symbol sits on the existing dark banner. Do not add a tile, shadow, glow, text or border around it.
-All existing banner pixels outside that small logo area should remain unchanged: especially every app UI detail, the three active checkmarks, 45%/60%/45% brightness values, Studio auto-brightness controls only, no ASUS auto-brightness control, all promotional wording, typography, app window size and position, and the charcoal/blue background. No recropping or rearrangement. This is a restrained brand-logo insertion, not a redesign.
+Image 1 is the existing re-sPLAY README banner to edit. Image 2 is the replacement three-monitor logo.
+Replace ONLY the old blue S-shaped symbol above the large left-side "re-sPLAY" wordmark with the three-monitor logo from image 2.
+Preserve the replacement logo's exact arrangement: one front-facing center screen and two side screens angled inward, three blue outline frames, three minimal stands, subtle darker-blue thickness on the outside edges. Remove image 2's white background AND white screen interiors so the banner's dark background shows through all empty areas. Retain only the blue logo geometry. Place the visible three-monitor mark left-aligned with the existing wordmark, approximately x=72, y=153, width=310 pixels, height=115 pixels on the 1672x941 banner. No container, no tile, no additional shadows or text. Remove the old S symbol completely.
+Keep all other banner content unchanged: app window size and position; all monitor names; all three active checkmarks; brightness values 45%, 60%, 45%; Studio auto-brightness toggles only, no ASUS auto-brightness control; all promotional wording, original typography, and the charcoal/blue backdrop. Do not redesign, crop, distort, or rearrange the app or wording. One precise logo replacement.
 ```
