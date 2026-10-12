@@ -6,6 +6,14 @@ A native macOS menu bar app for choosing which displays to use—without unplugg
 
 Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.12**.
 
+## Download and install
+
+**[Download re-sPLAY v0.8.12 for Apple silicon](https://github.com/tskelt0n/re-sPLAY/releases/download/v0.8.12/re-sPLAY-v0.8.12-macos27-arm64.zip)** · [Release notes and checksums](https://github.com/tskelt0n/re-sPLAY/releases/tag/v0.8.12)
+
+Unzip the download, quit any running copy, and drag **re-sPLAY.app** into Applications. **No Xcode, Command Line Tools, or build step is required.** Requires an M-series Mac running macOS 27 or later.
+
+This first preview is **ad-hoc signed, not Developer ID signed or notarized**. If macOS blocks the first launch as an unverified developer and you trust the download, try opening it, then use **System Settings → Privacy & Security → Open Anyway**. See the [installation guide](docs/INSTALL.md) and [Apple's first-open instructions](https://support.apple.com/en-us/102445). Managed Macs may prohibit this exception.
+
 ## Features
 
 - **Use only this:** activate any connected display and disconnect the others in software.
@@ -31,12 +39,13 @@ Quick Controls keeps display switching and brightness in the menu bar:
 ## Requirements
 
 - An Apple silicon Mac running macOS 27 or later.
-- Xcode or Command Line Tools providing Swift and the macOS 27 SDK to build.
 - A supported display connection. Tested with an M4 Max MacBook Pro, two Apple Studio Displays, an ASUS PG32UCDM, and CalDigit TS4 docks on macOS 27.0.1.
+
+Only developers building from source need Xcode or Command Line Tools providing Swift and the macOS 27 SDK.
 
 The app uses private macOS display APIs resolved at runtime. Compatibility with other hardware and future macOS versions is not guaranteed. See [verification notes and limitations](TESTING.md).
 
-## Build and install
+## Build from source (optional)
 
 ```sh
 git clone https://github.com/tskelt0n/re-sPLAY.git
@@ -63,6 +72,12 @@ open "$HOME/Applications/re-sPLAY.app"
 ```
 
 Enable **Launch at login** in the app if desired. Keep the installed app at a stable location for login registration. Click its menu-bar icon for Quick Controls without bringing the main window forward, or choose **Open re-sPLAY** to show the main window. Right-click the menu-bar icon for the compact command menu.
+
+Maintainers can run `./Scripts/package-release.sh` to rebuild and produce a versioned ZIP, installation guide, and SHA-256 checksum in `dist/`. These release artifacts are uploaded to GitHub Releases rather than committed to Git.
+
+## Privacy
+
+re-sPLAY keeps display settings locally and includes no analytics or automatic diagnostic uploads. Packaged downloads contain no developer preferences or device diagnostics. See [PRIVACY.md](PRIVACY.md) for stored settings and guidance on sharing diagnostic output.
 
 ## Using re-sPLAY
 

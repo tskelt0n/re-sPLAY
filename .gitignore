@@ -24,3 +24,13 @@ xcuserdata/
 .env
 .env.*
 !.env.example
+
+# Local signing material and private release diagnostics
+*.p12
+*.p8
+*.pem
+*.key
+*.keychain
+*.keychain-db
+/credentials/
+/diagnostics/

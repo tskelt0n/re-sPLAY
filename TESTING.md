@@ -113,6 +113,10 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 
 ## Build checks
 
+The first downloadable preview adds `Scripts/package-release.sh`, which rebuilds the app, checks its signature and architecture, packages `INSTALL.md`, and generates `SHA256SUMS.txt`. Release verification includes extracting the ZIP into a clean directory, re-verifying the app signature, checking bundle version/minimum OS and system-only runtime libraries, scanning the extracted payload, and validating the checksum. It does not establish a clean-machine Gatekeeper launch: this preview remains ad-hoc signed and unnotarized.
+
+Before preparing the first release, Gitleaks 8.30.1 found no secrets in 21 reachable commits or the tracked snapshot. An additional review covered 127 historical blobs, visible text and metadata from 30 unique historical images, commit identities, and executable strings. The review found a real-name author/committer in historical Git metadata, but no personal email, home-directory paths, device UUIDs in images, or credentials in the release payload. Generated artwork contains provenance metadata from its image provider; it was retained. History cleanup is a separate publication step and must be verified before making the repository public.
+
 ```sh
 bash -n build.sh
 ./build.sh
