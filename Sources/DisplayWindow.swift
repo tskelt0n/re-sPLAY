@@ -372,7 +372,15 @@ struct DisplayPanel: View {
     @State private var showInfo = false
     var body: some View {
         VStack(spacing: 14) {
-            DisplayIllustration(display: display).frame(height: previewHeight)
+            Button { model.prefer(display.id) } label: {
+                DisplayIllustration(display: display).frame(height: previewHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).disabled(model.busy)
+            .accessibilityLabel("Select \(display.name) for the toggle shortcut")
+            .accessibilityValue(display.preferred ? "Selected" : "Not selected")
+            .accessibilityAddTraits(display.preferred ? .isSelected : [])
+            .help(display.preferred ? "Selected for ⌃⌥⌘1" : "Click to select this display for ⌃⌥⌘1")
             VStack(spacing: 14) {
                 HStack(spacing: 5) {
                     Spacer(minLength: 0)
@@ -386,13 +394,10 @@ struct DisplayPanel: View {
                 BrightnessControl(model: model, display: display)
                 if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
                 else { Color.clear.frame(height: 24).accessibilityHidden(true) }
-                HStack(spacing: 10) {
-                    Button("Use only this") { model.useOnly(display.id) }
-                        .buttonStyle(.bordered).frame(maxWidth: .infinity)
-                        .disabled(model.busy || !display.available || model.isOnlyActive(display))
-                        .accessibilityLabel("Use only \(display.name)")
-                    PreferenceButton(model: model, display: display)
-                }
+                Button("Use only this") { model.useOnly(display.id) }
+                    .buttonStyle(.bordered).frame(maxWidth: .infinity)
+                    .disabled(model.busy || !display.available || model.isOnlyActive(display))
+                    .accessibilityLabel("Use only \(display.name)")
             }.frame(maxWidth: 260).padding(.horizontal, 18)
         }.frame(maxWidth: 420).padding(.vertical, 6)
     }
@@ -427,7 +432,22 @@ struct DisplayIllustration: View {
                             .frame(width: width, height: screenHeight)
                     }
                 }.frame(width: width, height: screenHeight)
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(display.active ? brandAccent.opacity(0.8) : Color.gray.opacity(0.4), lineWidth: display.active ? 2 : 1))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(display.preferred ? brandAccent : Color.gray.opacity(display.active ? 0.65 : 0.4), lineWidth: display.preferred ? 2 : 1)
+                            .shadow(color: display.preferred ? brandAccent.opacity(0.65) : .clear, radius: 5)
+                            .shadow(color: display.preferred ? brandAccent.opacity(0.3) : .clear, radius: 13)
+                    }
+                    .overlay(alignment: .top) {
+                        if display.preferred {
+                            Label("Selected", systemImage: "checkmark")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 11).padding(.vertical, 5)
+                                .background(brandAccent, in: Capsule())
+                                .offset(y: -12)
+                        }
+                    }
                 if display.builtin {
                     RoundedRectangle(cornerRadius: 3).fill(LinearGradient(colors: [.gray, Color(white: 0.8), .gray], startPoint: .top, endPoint: .bottom))
                         .frame(width: width + 8, height: 8)
@@ -464,8 +484,14 @@ struct PreferenceButton: View {
     let display: DisplayItem
     var body: some View {
         Button { model.prefer(display.id) } label: {
-            Image(systemName: display.preferred ? "star.fill" : "star")
-                .foregroundStyle(display.preferred ? brandAccent : Color.secondary).frame(width: 25, height: 25)
+            HStack(spacing: 5) {
+                if display.preferred { Image(systemName: "checkmark") }
+                Text(display.preferred ? "Selected" : "Select")
+            }
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(display.preferred ? brandAccent : Color.primary)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(display.preferred ? brandAccent.opacity(0.14) : Color.primary.opacity(0.06), in: Capsule())
         }.buttonStyle(.plain).disabled(model.busy)
             .accessibilityLabel("Use \(display.name) with the toggle shortcut")
             .accessibilityValue(display.preferred ? "Selected" : "Not selected")
@@ -541,9 +567,9 @@ struct DisplayDetails: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(display.name).font(.system(size: 16, weight: .semibold))
             Text(display.active ? model.brightness[display.id]?.error ?? model.brightness[display.id]?.detail ?? "Reading brightness…" : "Reconnect this display to adjust brightness.")
-            if display.preferred { Label("Selected for ⌃⌥⌘1", systemImage: "star.fill") }
+            if display.preferred { Label("Selected for ⌃⌥⌘1", systemImage: "checkmark.circle.fill") }
             Divider()
-            Text("Use only this connects this display and disconnects the others. Active controls each display individually.").foregroundStyle(.secondary)
+            Text("Click a monitor preview to select it for ⌃⌥⌘1. Use only this connects this display and disconnects the others. Active controls each display individually.").foregroundStyle(.secondary)
             if model.supportsAuto(display) {
                 Text("Auto brightness lets macOS respond to ambient light. Turn it off to keep your chosen manual level.").foregroundStyle(.secondary)
             }

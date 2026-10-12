@@ -4,7 +4,7 @@
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
-Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.9**.
+Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.10**.
 
 ## Features
 
@@ -22,7 +22,7 @@ Display disconnection requests standby; it does not cut AC power. Actual standby
 
 ## Preview
 
-The promotional banner shows version 0.8.4; the dark and collapsed app captures show the seamless window backgrounds introduced in 0.8.9. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
+The promotional banner shows version 0.8.4; the dark and collapsed app captures show the selected-monitor glow and badge introduced in 0.8.10. View the unedited app captures in [dark appearance](docs/images/app-dark.png), [light appearance](docs/images/app-light.png), or [with the sidebar collapsed](docs/images/sidebar-collapsed.png). The app follows your system appearance.
 
 Quick Controls keeps display switching and brightness in the menu bar:
 
@@ -66,7 +66,7 @@ Enable **Launch at login** in the app if desired. Keep the installed app at a st
 
 ## Using re-sPLAY
 
-The **Displays** page presents one monitor preview per display. Columns follow the actual display count and available width: collapsing the sidebar expands the previews and controls, while narrow windows wrap them into fewer columns. The Active switch connects or disconnects it, the star selects the shortcut target, and the info button explains its controls. Preview wallpaper is bundled illustrative artwork, not a live screen capture.
+The **Displays** page presents one monitor preview per display. Columns follow the actual display count and available width: collapsing the sidebar expands the previews and controls, while narrow windows wrap them into fewer columns. The Active switch connects or disconnects it. Click a monitor graphic to select the shortcut target, identified by a subtle purple glow and a Selected badge; the info button explains its controls. Preview wallpaper is bundled illustrative artwork, not a live screen capture.
 
 The **Display setup** segmented control switches between all displays and a single monitor. These controls act immediately; there is no separate Apply step. **Settings** contains the shortcut target and launch-at-login preference.
 

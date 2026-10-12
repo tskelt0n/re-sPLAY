@@ -89,6 +89,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Inspected the installed dark window in both sidebar states: no contrasting top strip, the toggle remains in place, and monitor previews expand when collapsed. Resized the window vertically and confirmed all controls fit at 1120 × 832 points; shorter windows scroll the content. Saved both preview captures.
 - Compilation, shell syntax, installed strict signature verification, ZIP integrity, and whitespace checks passed. Settings, light appearance, fullscreen, and Reduce Motion were not retested in this pass. No monitor settings were changed.
 
+## Version 0.8.10 selected monitor treatment
+
+- Selected shortcut displays have a purple screen-edge glow and a checkmarked Selected badge at the top of the monitor graphic. Unselected displays use neutral borders; active state remains a separate green indicator.
+- Clicking a monitor graphic selects the shortcut target. Removed the main-window star controls and replaced the menu-popover preference control with Select/Selected text pills. Accessible labels, selected traits, and shortcut tooltips identify the purpose.
+- In the installed app, selected Studio Display (1), visually confirmed that only its glow and badge appeared, then restored ASUS and verified the selected state moved back. All three displays stayed active with brightness unchanged. Checked the collapsed sidebar layout and refreshed both dark preview captures.
+- Build, shell syntax, installed strict signature verification, ZIP integrity, and whitespace checks passed. Menu-popover rendering, light appearance, disconnected selection, and hardware switching were not retested in this visual pass.
+
 ## Build checks
 
 ```sh
