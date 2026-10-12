@@ -69,6 +69,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Installed app launched and sidebar collapse/reopen reached the correct states. The user physically confirmed that both sidebar and page transitions feel smooth; automated captures only verify settled states. Reduce Motion was not toggled on the user's system during testing.
 - Compilation, installed strict signature verification, archive integrity, and whitespace checks passed.
 
+## Version 0.8.7 connected sidebar selection
+
+- Replaced the system list highlight with navigation buttons whose selected background uses the same semantic window-background color as the detail pane. The selected shape has rounded left corners and extends to the sidebar's right edge.
+- Preserved selection accessibility traits, native button keyboard activation, up/down navigation handling, and the existing page transitions.
+- Visually confirmed the selected Displays tab joins the main pane and saved an updated capture. Settings inspection again encountered the known Codex native inspection-service failure; its rendered selection and keyboard navigation were not independently verified in this pass.
+- Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. No display settings were changed.
+
 ## Build checks
 
 ```sh

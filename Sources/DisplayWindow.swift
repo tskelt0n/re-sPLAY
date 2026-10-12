@@ -91,20 +91,38 @@ struct DisplayWindow: View {
                 }
                 .padding(.horizontal, 22).padding(.top, 24).padding(.bottom, 24)
 
-                List(selection: $model.section) {
+                VStack(spacing: 4) {
                     ForEach(AppSection.allCases) { section in
-                        HStack(spacing: 14) {
-                            Image(systemName: section.icon)
-                                .font(.system(size: 21, weight: .regular))
-                                .frame(width: 28).accessibilityHidden(true)
-                            Text(section.rawValue).font(.system(size: 17, weight: .medium))
-                            Spacer(minLength: 0)
+                        Button { model.section = section } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: section.icon)
+                                    .font(.system(size: 21, weight: .regular))
+                                    .frame(width: 28).accessibilityHidden(true)
+                                Text(section.rawValue).font(.system(size: 17, weight: .medium))
+                                Spacer(minLength: 0)
+                            }
+                            .foregroundStyle(.primary)
+                            .frame(minHeight: 60)
+                            .padding(.leading, 14).padding(.trailing, 20)
+                            .contentShape(Rectangle())
+                            .background {
+                                if model.section == section {
+                                    UnevenRoundedRectangle(topLeadingRadius: 10, bottomLeadingRadius: 10)
+                                        .fill(Color(nsColor: .windowBackgroundColor))
+                                }
+                            }
                         }
-                        .frame(minHeight: 48)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .tag(section)
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(section.rawValue)
+                        .accessibilityAddTraits(model.section == section ? .isSelected : [])
                     }
-                }.listStyle(.sidebar)
+                }
+                .padding(.leading, 8)
+                .onMoveCommand { direction in
+                    if direction == .up { model.section = .displays }
+                    else if direction == .down { model.section = .settings }
+                }
+                Spacer(minLength: 24)
 
                 HStack(spacing: 10) {
                     Circle().fill(model.busy ? Color.orange : Color.green)
