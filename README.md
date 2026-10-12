@@ -4,7 +4,7 @@
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
-Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.5**.
+Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.6**.
 
 ## Features
 
@@ -15,7 +15,7 @@ Use one monitor exclusively, restore your workspace, and adjust each display’s
 - **Auto brightness:** toggle macOS ambient-light adjustment independently on supported displays.
 - **Global shortcuts:** choose a preferred display, switch to it, and restore your workspace from other apps.
 - **Launch at login:** start quietly in the menu bar.
-- **Native interface:** a sidebar-based window with monitor previews, active switches, brightness controls, and a separate Settings page.
+- **Native interface:** a sidebar-based window with monitor previews, active switches, brightness controls, and a separate Settings page. Sidebar and page transitions respect macOS Reduce Motion.
 - **Menu-bar Quick Controls:** Displays and Settings tabs, single-display presets, brightness sliders, and expandable per-display controls.
 
 Display disconnection requests standby; it does not cut AC power. Actual standby behavior depends on the monitor and connection. This is an independent implementation with no Lunar installation, subscription, code, or assets required.

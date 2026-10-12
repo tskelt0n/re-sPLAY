@@ -65,8 +65,20 @@ final class DisplayWindowModel: ObservableObject {
 
 struct DisplayWindow: View {
     @ObservedObject var model: DisplayWindowModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showHelp = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    private var sidebarAnimation: Animation? {
+        reduceMotion ? nil : .smooth(duration: 0.32, extraBounce: 0)
+    }
+    private var pageAnimation: Animation {
+        .easeInOut(duration: reduceMotion ? 0.12 : 0.24)
+    }
+    private var pageTransition: AnyTransition {
+        reduceMotion ? .opacity : .asymmetric(
+            insertion: .opacity.combined(with: .offset(y: 8)),
+            removal: .opacity)
+    }
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(spacing: 0) {
@@ -107,7 +119,17 @@ struct DisplayWindow: View {
                 .toolbar(removing: .sidebarToggle)
         } detail: {
             VStack(spacing: 0) {
-                if model.section == .displays { displayPage } else { settingsPage }
+                ZStack(alignment: .topLeading) {
+                    if model.section == .displays {
+                        displayPage.transition(pageTransition)
+                    } else {
+                        settingsPage.transition(pageTransition)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                // Animate navigation only, not brightness/status polling updates.
+                .animation(pageAnimation, value: model.section)
                 Divider()
                 HStack(spacing: 10) {
                     if model.busy { ProgressView().controlSize(.small) }
@@ -126,7 +148,9 @@ struct DisplayWindow: View {
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
-                    columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
+                    withAnimation(sidebarAnimation) {
+                        columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
+                    }
                 } label: {
                     Image(systemName: "sidebar.left")
                 }

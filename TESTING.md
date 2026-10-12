@@ -62,6 +62,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Inspected the installed window: labels fit, all three monitor columns remain visible, and sidebar collapse/reopen works. Captured the updated dark window for the README. Settings content was not retested; navigation selection wiring is unchanged.
 - Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. Display settings were unchanged.
 
+## Version 0.8.6 navigation motion
+
+- Sidebar visibility changes now run in a 0.32-second smooth animation transaction. Page changes use a 0.24-second crossfade with an 8-point insertion offset inside a clipped, stable detail container.
+- Animations are scoped to sidebar visibility and selected page, not periodic brightness or status updates. Reduce Motion disables the sidebar spring and page translation, retaining a 0.12-second opacity fade.
+- Installed app launched and sidebar collapse/reopen reached the correct states. The user physically confirmed that both sidebar and page transitions feel smooth; automated captures only verify settled states. Reduce Motion was not toggled on the user's system during testing.
+- Compilation, installed strict signature verification, archive integrity, and whitespace checks passed.
+
 ## Build checks
 
 ```sh
