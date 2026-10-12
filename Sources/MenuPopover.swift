@@ -3,7 +3,6 @@ import SwiftUI
 struct MenuPopover: View {
     @ObservedObject var model: DisplayWindowModel
     let openWindow: () -> Void
-    let openSettings: () -> Void
     let quit: () -> Void
     @State private var section: AppSection = .displays
     @State private var expandedIDs: Set<String> = []
@@ -14,9 +13,9 @@ struct MenuPopover: View {
                 Image(nsImage: BrandArtwork.symbol()).resizable().frame(width: 26, height: 26)
                 Text("re-sPLAY").font(.system(size: 17, weight: .semibold))
                 Spacer()
-                Button(action: openSettings) { Image(systemName: "gearshape").font(.system(size: 17)) }
+                Button { section = .settings } label: { Image(systemName: "gearshape").font(.system(size: 17)) }
                     .buttonStyle(.plain).foregroundStyle(.secondary)
-                    .help("Open Settings").accessibilityLabel("Open re-sPLAY Settings")
+                    .help("Show Settings").accessibilityLabel("Show Quick Controls Settings")
             }
             Picker("Section", selection: $section) {
                 ForEach(AppSection.allCases) { Text($0.rawValue).tag($0) }

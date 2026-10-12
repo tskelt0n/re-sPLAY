@@ -1,10 +1,10 @@
 # re-sPLAY
 
-[![re-sPLAY 0.8.0 — all three displays active with individual brightness controls.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
+[![re-sPLAY 0.8.1 — all three displays active with individual brightness controls.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
-Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.0**.
+Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.1**.
 
 ## Features
 
@@ -22,7 +22,7 @@ Display disconnection requests standby; it does not cut AC power. Actual standby
 
 ## Preview
 
-The main window above is a real capture of version 0.8.0. It follows the system's light or dark appearance. [View the light appearance](docs/images/app-light.png).
+The main window above is a real capture of version 0.8.1. It follows the system's light or dark appearance. [View the light appearance](docs/images/app-light.png).
 
 Quick Controls keeps display switching and brightness in the menu bar:
 
@@ -62,7 +62,7 @@ ditto -x -k build/re-sPLAY-macOS27.zip "$HOME/Applications"
 open "$HOME/Applications/re-sPLAY.app"
 ```
 
-Enable **Launch at login** in the app if desired. Keep the installed app at a stable location for login registration. Click its menu-bar icon for Quick Controls, or choose **Open re-sPLAY** to show the main window. Right-click the menu-bar icon for the compact command menu.
+Enable **Launch at login** in the app if desired. Keep the installed app at a stable location for login registration. Click its menu-bar icon for Quick Controls without bringing the main window forward, or choose **Open re-sPLAY** to show the main window. Right-click the menu-bar icon for the compact command menu.
 
 ## Using re-sPLAY
 
@@ -70,7 +70,7 @@ The **Displays** page presents one monitor preview per display. The Active switc
 
 The **Display setup** segmented control switches between all displays and a single monitor. These controls act immediately; there is no separate Apply step. **Settings** contains the shortcut target and launch-at-login preference.
 
-Quick Controls offers the same display presets and brightness sliders directly in the menu-bar popover. Expand a monitor row for its Active switch, auto brightness when supported, and shortcut preference. Its Settings tab lets you adjust startup and shortcut preferences without opening the window. While re-sPLAY is focused, **Command–Shift–D** opens Quick Controls and **Command–comma** opens Settings.
+Quick Controls offers the same display presets and brightness sliders directly in the menu-bar popover. Expand a monitor row for its Active switch, auto brightness when supported, and shortcut preference. Its Settings tab and gear button let you adjust startup and shortcut preferences without opening the window. While re-sPLAY is focused, **Command–Shift–D** opens Quick Controls and **Command–comma** opens Settings.
 
 Choose **Use only this** to connect that display if necessary, then disconnect the others. This also makes it the shortcut target. The Active switch controls an individual display; re-sPLAY refuses to disconnect the last active display. **Restore all** reconnects displays disabled by this app. Quitting normally also restores those displays.
 

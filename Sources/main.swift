@@ -241,6 +241,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         status.button?.toolTip = "re-sPLAY — Display controls"
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1120, height: 760), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "re-sPLAY"; window.isReleasedWhenClosed = false
+        window.titleVisibility = .hidden
         window.minSize = NSSize(width: 860, height: 640)
         window.titlebarAppearsTransparent = true
         window.toolbarStyle = .unified
@@ -276,11 +277,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView = NSHostingView(rootView: DisplayWindow(model: windowModel))
         popover.behavior = .transient
         popover.animates = true
-        popover.contentSize = NSSize(width: 530, height: 590)
-        popover.contentViewController = NSHostingController(rootView: MenuPopover(model: windowModel,
+        let popoverController = NSHostingController(rootView: MenuPopover(model: windowModel,
             openWindow: { [weak self] in self?.showWindow() },
-            openSettings: { [weak self] in self?.windowModel.section = .settings; self?.showWindow() },
             quit: { [weak self] in self?.quitAction() }))
+        popoverController.sizingOptions = [.preferredContentSize]
+        popover.contentViewController = popoverController
         if arguments.contains("--appearance-light") { window.appearance = NSAppearance(named: .aqua); popover.appearance = window.appearance }
         if arguments.contains("--appearance-dark") { window.appearance = NSAppearance(named: .darkAqua); popover.appearance = window.appearance }
         shortcuts = GlobalShortcuts(toggle: { [weak self] in self?.toggleShortcut() }, restore: { [weak self] in self?.restoreShortcut() })
@@ -297,7 +298,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.refreshUI()
         }
     }
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { showWindow(); return true }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !popover.isShown else { return false }
+        showWindow()
+        return true
+    }
     @objc func loginAction() {
         do {
             switch SMAppService.mainApp.status {
@@ -338,8 +343,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func showPopover() {
         guard let button = status.button else { return }
         refreshUI()
-        NSApp.activate(ignoringOtherApps: true)
+        // Resolve SwiftUI's current height before AppKit anchors the popover.
+        // A stale height followed by a shrink can leave a gap below the menu bar.
+        if let view = popover.contentViewController?.view {
+            view.layoutSubtreeIfNeeded()
+            popover.contentSize = view.fittingSize
+        }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        // Make only the popover key; activating the application raises its main window.
         popover.contentViewController?.view.window?.makeKey()
     }
     func refreshUI() {

@@ -27,6 +27,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Checked the last-display guard and launch-at-login status. The installed copy follows the system appearance and retains the existing bundle identifier, preferences, and login registration.
 - The display-switching engine and native HDR/DDC brightness implementation are unchanged. Workspace recall is intentionally deferred. A full hardware regression cycle and minimum-window-size rendering check were not repeated for this UI change.
 
+## Version 0.8.1 window and popover fixes
+
+- Verified the title is visually hidden while retaining the window's accessibility name.
+- Clicked the sidebar toggle in both directions and compared rendered screenshots: the single button remains beside the traffic-light controls on the left. Enforced the sidebar's minimum width to keep its brand label readable.
+- The popover now resolves its hosted content size before positioning instead of starting with a stale fixed height. Opening it no longer calls application-wide activation, and reopening is ignored while the popover is shown. Its gear button selects the internal Settings tab.
+- Build and installed strict signature verification passed. The user physically confirmed that the panel sits directly beneath the menu-bar icon and opens without reopening the closed main window.
+
 ## Build checks
 
 ```sh

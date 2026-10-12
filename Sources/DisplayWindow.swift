@@ -66,8 +66,9 @@ final class DisplayWindowModel: ObservableObject {
 struct DisplayWindow: View {
     @ObservedObject var model: DisplayWindowModel
     @State private var showHelp = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(spacing: 0) {
                 List(selection: $model.section) {
                     ForEach(AppSection.allCases) { section in
@@ -77,10 +78,12 @@ struct DisplayWindow: View {
                 }.listStyle(.sidebar)
                 HStack(spacing: 10) {
                     Image(nsImage: BrandArtwork.symbol()).resizable().frame(width: 27, height: 27)
-                    Text("re-sPLAY").font(.system(size: 14, weight: .semibold))
+                    Text("re-sPLAY").font(.system(size: 14, weight: .semibold)).lineLimit(1)
                     Spacer()
                 }.padding(20)
-            }.navigationSplitViewColumnWidth(min: 180, ideal: 194, max: 230)
+            }.frame(minWidth: 180, idealWidth: 194, maxWidth: 230)
+                .navigationSplitViewColumnWidth(min: 180, ideal: 194, max: 230)
+                .toolbar(removing: .sidebarToggle)
         } detail: {
             VStack(spacing: 0) {
                 if model.section == .displays { displayPage } else { settingsPage }
@@ -97,7 +100,20 @@ struct DisplayWindow: View {
                         .popover(isPresented: $showHelp) { SwitchingHelp() }
                 }.padding(.horizontal, 28).padding(.vertical, 15)
             }.background(Color(nsColor: .windowBackgroundColor))
-        }.tint(brandAccent)
+        }
+        .toolbar(removing: .sidebarToggle)
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
+                } label: {
+                    Image(systemName: "sidebar.left")
+                }
+                .help(columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
+                .accessibilityLabel(columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
+            }
+        }
+        .tint(brandAccent)
     }
 
     private var displayPage: some View {
