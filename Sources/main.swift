@@ -208,6 +208,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let engine = DisplayEngine()
     var status: NSStatusItem!
     var window: NSWindow!
+    let popover = NSPopover()
+    var contextMenu: NSMenu?
     let windowModel = DisplayWindowModel()
     let brightness = BrightnessController()
     var message = "Choose the displays you want to use."
@@ -232,17 +234,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         engine.defaults.set(displayOrder, forKey: "displayOrder")
         engine.defaults.set(displayNames, forKey: "displayNames")
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        status.button?.image = NSImage(systemSymbolName: "display.2", accessibilityDescription: "re-sPLAY")
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 820), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        status.button?.image = BrandArtwork.symbol(size: 20, template: true)
+        status.button?.target = self
+        status.button?.action = #selector(statusClicked(_:))
+        status.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        status.button?.toolTip = "re-sPLAY — Display controls"
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1120, height: 760), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.title = "re-sPLAY"; window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 780, height: 620)
+        window.minSize = NSSize(width: 860, height: 640)
+        window.titlebarAppearsTransparent = true
+        window.toolbarStyle = .unified
+        window.toolbar = NSToolbar(identifier: "re-sPLAY.MainToolbar")
         window.setFrameAutosaveName("DisplaySwitchMainWindow")
         // Give the new controls room once; subsequent launches honor the saved size.
-        if !engine.defaults.bool(forKey: "readableLayoutExpanded") {
-            window.setContentSize(NSSize(width: max(1000, window.contentLayoutRect.width), height: max(820, window.contentLayoutRect.height)))
-            engine.defaults.set(true, forKey: "readableLayoutExpanded")
+        if !engine.defaults.bool(forKey: "nativeLayoutExpanded") {
+            window.setContentSize(NSSize(width: max(1120, window.contentLayoutRect.width), height: 760))
+            engine.defaults.set(true, forKey: "nativeLayoutExpanded")
         }
         window.center()
+        configureApplicationMenu()
         windowModel.restore = { [weak self] in self?.restoreAction() }
         windowModel.useOnly = { [weak self] id in self?.useOnlyDisplay(id) }
         windowModel.toggle = { [weak self] id in
@@ -264,8 +274,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowModel.retryBrightness = { [weak self] id in self?.brightness.refresh(id) }
         window.contentView = NSHostingView(rootView: DisplayWindow(model: windowModel))
-        if arguments.contains("--appearance-light") { window.appearance = NSAppearance(named: .aqua) }
-        if arguments.contains("--appearance-dark") { window.appearance = NSAppearance(named: .darkAqua) }
+        popover.behavior = .transient
+        popover.animates = true
+        popover.contentSize = NSSize(width: 530, height: 590)
+        popover.contentViewController = NSHostingController(rootView: MenuPopover(model: windowModel,
+            openWindow: { [weak self] in self?.showWindow() },
+            openSettings: { [weak self] in self?.windowModel.section = .settings; self?.showWindow() },
+            quit: { [weak self] in self?.quitAction() }))
+        if arguments.contains("--appearance-light") { window.appearance = NSAppearance(named: .aqua); popover.appearance = window.appearance }
+        if arguments.contains("--appearance-dark") { window.appearance = NSAppearance(named: .darkAqua); popover.appearance = window.appearance }
         shortcuts = GlobalShortcuts(toggle: { [weak self] in self?.toggleShortcut() }, restore: { [weak self] in self?.restoreShortcut() })
         if arguments.contains("--enable-login") {
             do { if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() } }
@@ -273,6 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         refreshUI()
         if arguments.contains("--show-window") { showWindow() }
+        if arguments.contains("--show-popover") { showPopover() }
         timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
             guard let self else { return }
             if self.engine.onlineIDs().allSatisfy({ CGDisplayIsActive($0) == 0 }) { try? self.engine.restore() }
@@ -291,7 +309,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch { message = "Couldn’t update launch at login: \(error.localizedDescription)" }
         refreshUI()
     }
-    @objc func showWindow() { NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil) }
+    func configureApplicationMenu() {
+        let main = NSMenu()
+        let appItem = main.addItem(withTitle: "re-sPLAY", action: nil, keyEquivalent: "")
+        let appMenu = NSMenu(title: "re-sPLAY")
+        appItem.submenu = appMenu
+        appMenu.addItem(withTitle: "Open re-sPLAY", action: #selector(showWindow), keyEquivalent: "o").target = self
+        appMenu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",").target = self
+        let quick = appMenu.addItem(withTitle: "Quick Controls", action: #selector(showQuickControls), keyEquivalent: "d")
+        quick.target = self
+        quick.keyEquivalentModifierMask = [.command, .shift]
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "Restore displays and quit", action: #selector(quitAction), keyEquivalent: "q").target = self
+        NSApp.mainMenu = main
+    }
+    @objc func showSettings() { windowModel.section = .settings; showWindow() }
+    @objc func showQuickControls() { showPopover() }
+    @objc func showWindow() { popover.performClose(nil); NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil) }
+    @objc func statusClicked(_ sender: NSStatusBarButton) {
+        if NSApp.currentEvent?.type == .rightMouseUp, let contextMenu {
+            popover.performClose(nil)
+            status.menu = contextMenu
+            sender.performClick(nil)
+            status.menu = nil
+        } else if popover.isShown { popover.performClose(nil) }
+        else { showPopover() }
+    }
+    func showPopover() {
+        guard let button = status.button else { return }
+        refreshUI()
+        NSApp.activate(ignoringOtherApps: true)
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
+    }
     func refreshUI() {
         engine.refresh()
         brightness.update(engine.known.filter { engine.isActive($0) })
@@ -313,7 +363,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         login.target = self; login.state = SMAppService.mainApp.status == .enabled ? .on : .off
         menu.addItem(withTitle: "Open re-sPLAY…", action: #selector(showWindow), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Restore displays and quit", action: #selector(quitAction), keyEquivalent: "q").target = self
-        status.menu = menu
+        contextMenu = menu
         for d in engine.known where !displayOrder.contains(d.uuid) { displayOrder.append(d.uuid) }
         engine.defaults.set(displayOrder, forKey: "displayOrder")
         windowModel.displays = engine.known.sorted { (displayOrder.firstIndex(of: $0.uuid) ?? 0) < (displayOrder.firstIndex(of: $1.uuid) ?? 0) }.map { d in

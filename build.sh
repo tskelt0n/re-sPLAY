@@ -6,9 +6,10 @@ STAGE=$(mktemp -d /tmp/displayswitch-build.XXXXXX)
 trap 'rm -rf "$STAGE"' EXIT
 APP="$STAGE/re-sPLAY.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-xcrun swift Scripts/GenerateIcon.swift "$STAGE/AppIcon.iconset"
+xcrun swiftc Sources/BrandArtwork.swift Scripts/GenerateIcon.swift -o "$STAGE/generate-icon" -framework AppKit
+"$STAGE/generate-icon" "$STAGE/AppIcon.iconset"
 iconutil -c icns "$STAGE/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"
-cp LICENSE THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
+cp LICENSE THIRD_PARTY_NOTICES.md Assets/DisplayWallpaper.png "$APP/Contents/Resources/"
 xcrun swiftc -swift-version 5 -O -target arm64-apple-macos27.0 Sources/*.swift -o "$APP/Contents/MacOS/re-sPLAY" -framework SwiftUI -framework AppKit -framework CoreGraphics -framework Carbon -framework ServiceManagement -framework IOKit
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -20,7 +21,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleDisplayName</key><string>re-sPLAY</string>
 <key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.7.2</string>
+<key>CFBundleShortVersionString</key><string>0.8.0</string>
 <key>LSMinimumSystemVersion</key><string>27.0</string>
 <key>LSUIElement</key><true/>
 <key>NSHighResolutionCapable</key><true/>

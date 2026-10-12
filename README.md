@@ -1,10 +1,10 @@
 # re-sPLAY
 
-[![re-sPLAY logo and app preview — all three displays active, individual brightness sliders, and keyboard shortcuts.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
+[![re-sPLAY 0.8.0 — all three displays active with individual brightness controls.](docs/images/readme-banner.png)](docs/images/readme-banner.png)
 
 A native macOS menu bar app for choosing which displays to use—without unplugging cables.
 
-Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.7.2**.
+Use one monitor exclusively, restore your workspace, and adjust each display’s brightness from a compact SwiftUI interface. Built for macOS 27+ on Apple silicon. Current version: **0.8.0**.
 
 ## Features
 
@@ -15,9 +15,18 @@ Use one monitor exclusively, restore your workspace, and adjust each display’s
 - **Auto brightness:** toggle macOS ambient-light adjustment independently on supported displays.
 - **Global shortcuts:** choose a preferred display, switch to it, and restore your workspace from other apps.
 - **Launch at login:** start quietly in the menu bar.
-- **Native interface:** light and dark appearance, accessible controls, stable display labels, and resizable display cards.
+- **Native interface:** a sidebar-based window with monitor previews, active switches, brightness controls, and a separate Settings page.
+- **Menu-bar Quick Controls:** Displays and Settings tabs, single-display presets, brightness sliders, and expandable per-display controls.
 
 Display disconnection requests standby; it does not cut AC power. Actual standby behavior depends on the monitor and connection. This is an independent implementation with no Lunar installation, subscription, code, or assets required.
+
+## Preview
+
+The main window above is a real capture of version 0.8.0. It follows the system's light or dark appearance. [View the light appearance](docs/images/app-light.png).
+
+Quick Controls keeps display switching and brightness in the menu bar:
+
+<img src="docs/images/quick-controls.png" alt="re-sPLAY menu-bar Quick Controls with Displays and Settings tabs and three active monitors" width="556">
 
 ## Requirements
 
@@ -53,13 +62,17 @@ ditto -x -k build/re-sPLAY-macOS27.zip "$HOME/Applications"
 open "$HOME/Applications/re-sPLAY.app"
 ```
 
-Enable **Launch at login** in the app if desired. Keep the installed app at a stable location for login registration. Opening it again, or choosing **Open re-sPLAY…** in its menu, shows the window.
+Enable **Launch at login** in the app if desired. Keep the installed app at a stable location for login registration. Click its menu-bar icon for Quick Controls, or choose **Open re-sPLAY** to show the main window. Right-click the menu-bar icon for the compact command menu.
 
 ## Using re-sPLAY
 
-Each card represents a display. Its checkmark indicates an active connection, its star selects the shortcut target, and its info button explains the available controls.
+The **Displays** page presents one monitor preview per display. The Active switch connects or disconnects it, the star selects the shortcut target, and the info button explains its controls. Preview wallpaper is bundled illustrative artwork, not a live screen capture.
 
-Choose **Use only this** to connect that display if necessary, then disconnect the others. This also makes it the shortcut target. The power button controls an individual display; re-sPLAY refuses to disconnect the last active display. **Restore all** reconnects displays disabled by this app. Quitting normally also restores those displays.
+The **Display setup** segmented control switches between all displays and a single monitor. These controls act immediately; there is no separate Apply step. **Settings** contains the shortcut target and launch-at-login preference.
+
+Quick Controls offers the same display presets and brightness sliders directly in the menu-bar popover. Expand a monitor row for its Active switch, auto brightness when supported, and shortcut preference. Its Settings tab lets you adjust startup and shortcut preferences without opening the window. While re-sPLAY is focused, **Command–Shift–D** opens Quick Controls and **Command–comma** opens Settings.
+
+Choose **Use only this** to connect that display if necessary, then disconnect the others. This also makes it the shortcut target. The Active switch controls an individual display; re-sPLAY refuses to disconnect the last active display. **Restore all** reconnects displays disabled by this app. Quitting normally also restores those displays.
 
 | Shortcut | Action |
 | --- | --- |
@@ -108,15 +121,19 @@ If brightness is unavailable, use **Retry** and check the display’s connection
 | File | Responsibility |
 | --- | --- |
 | [Sources/main.swift](Sources/main.swift) | Display engine, menu bar, shortcuts, login registration, and diagnostics |
-| [Sources/DisplayWindow.swift](Sources/DisplayWindow.swift) | SwiftUI window and display cards |
+| [Sources/DisplayWindow.swift](Sources/DisplayWindow.swift) | Sidebar window, settings, shared display controls, and view model |
+| [Sources/MenuPopover.swift](Sources/MenuPopover.swift) | Tabbed menu-bar Quick Controls |
+| [Sources/BrandArtwork.swift](Sources/BrandArtwork.swift) | Shared return-frame logo drawing |
 | [Sources/Brightness.swift](Sources/Brightness.swift) | Native brightness, DDC/CI, auto brightness, and background I/O |
-| [Scripts/GenerateIcon.swift](Scripts/GenerateIcon.swift) | App icon generation using an SF Symbol |
+| [Scripts/GenerateIcon.swift](Scripts/GenerateIcon.swift) | App icon and brand export using the shared logo drawing |
 | [build.sh](build.sh) | Compilation, app bundle assembly, signing, and ZIP packaging |
 | [TESTING.md](TESTING.md) | Verification evidence and manual checks |
 
 The shell script is the authoritative build path; an Xcode project and Swift package manifest are not required. Build outputs are ignored by Git.
 
-The internal bundle identifier remains `local.DisplaySwitch` to preserve preferences, display labels, recovery state, and login registration from earlier versions. The product name is **re-sPLAY**.
+The internal bundle identifier remains `local.DisplaySwitch` to preserve preferences, display labels, recovery state, and login registration from earlier versions. The product name is **re-sPLAY**. The new purple return-frame identity is documented in [brand assets](docs/brand/README.md).
+
+Workspace saving and restoration of other apps’ window positions are planned separately and are not included in this version.
 
 ## License
 

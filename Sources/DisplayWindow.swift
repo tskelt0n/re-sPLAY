@@ -1,6 +1,14 @@
 import SwiftUI
 import AppKit
 
+let brandAccent = Color(nsColor: BrandArtwork.accent)
+
+enum AppSection: String, CaseIterable, Identifiable {
+    case displays = "Displays", settings = "Settings"
+    var id: String { rawValue }
+    var icon: String { self == .displays ? "display.2" : "gearshape" }
+}
+
 struct DisplayItem: Identifiable {
     let id: String
     let name: String
@@ -9,9 +17,16 @@ struct DisplayItem: Identifiable {
     let available: Bool
     let preferred: Bool
     let builtin: Bool
+    var shortName: String {
+        if name.contains("ASUS") { return "ASUS" }
+        if name.hasPrefix("Studio Display") { return name.replacingOccurrences(of: "Studio Display", with: "Studio") }
+        if builtin { return "MacBook" }
+        return name
+    }
 }
 
 final class DisplayWindowModel: ObservableObject {
+    @Published var section: AppSection = .displays
     @Published var displays: [DisplayItem] = []
     @Published var autoBrightness: [String: AutoBrightnessState] = [:]
     var setAutoBrightness: (String, Bool) -> Void = { _, _ in }
@@ -32,353 +47,377 @@ final class DisplayWindowModel: ObservableObject {
     var toggleLogin: () -> Void = {}
     var activeCount: Int { displays.filter(\.active).count }
     var activeDescription: String {
-        if busy { return "Updating your workspace…" }
+        if busy { return "Updating your displays…" }
         if activeCount == displays.count && activeCount > 1 { return "All displays active" }
         if activeCount == 1 { return "\(displays.first(where: \.active)?.name ?? "One display") only" }
         return "\(activeCount) displays active"
+    }
+    var feedback: String? {
+        if busy { return message }
+        if message.hasPrefix("Could") || message.contains("still active") || message.contains("failed") || message.hasPrefix("Keep at least") { return message }
+        return nil
+    }
+    func isOnlyActive(_ display: DisplayItem) -> Bool { activeCount == 1 && display.active }
+    func supportsAuto(_ display: DisplayItem) -> Bool {
+        display.name.hasPrefix("Studio Display") || display.builtin || autoBrightness[display.id]?.enabled != nil
     }
 }
 
 struct DisplayWindow: View {
     @ObservedObject var model: DisplayWindowModel
     @State private var showHelp = false
-    private let columns = [GridItem(.adaptive(minimum: 280), spacing: 16)]
-
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    header
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Text("Your displays").font(.system(size: 17, weight: .semibold))
-                            Spacer()
-                            Text("\(model.activeCount) of \(model.displays.count) active")
+        NavigationSplitView {
+            VStack(spacing: 0) {
+                List(selection: $model.section) {
+                    ForEach(AppSection.allCases) { section in
+                        Label(section.rawValue, systemImage: section.icon).tag(section)
+                            .font(.system(size: 14, weight: .medium)).padding(.vertical, 5)
+                    }
+                }.listStyle(.sidebar)
+                HStack(spacing: 10) {
+                    Image(nsImage: BrandArtwork.symbol()).resizable().frame(width: 27, height: 27)
+                    Text("re-sPLAY").font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                }.padding(20)
+            }.navigationSplitViewColumnWidth(min: 180, ideal: 194, max: 230)
+        } detail: {
+            VStack(spacing: 0) {
+                if model.section == .displays { displayPage } else { settingsPage }
+                Divider()
+                HStack(spacing: 10) {
+                    if model.busy { ProgressView().controlSize(.small) }
+                    else { Image(systemName: "menubar.rectangle").foregroundStyle(.secondary) }
+                    Text(model.feedback ?? "Quick controls are always in your menu bar.")
+                        .font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(2)
+                    Spacer()
+                    Button { showHelp.toggle() } label: { Image(systemName: "questionmark.circle") }
+                        .buttonStyle(.plain).help("About display switching")
+                        .accessibilityLabel("About display switching")
+                        .popover(isPresented: $showHelp) { SwitchingHelp() }
+                }.padding(.horizontal, 28).padding(.vertical, 15)
+            }.background(Color(nsColor: .windowBackgroundColor))
+        }.tint(brandAccent)
+    }
+
+    private var displayPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Displays").font(.system(size: 32, weight: .bold))
+                        Text("Choose the screens you want to use.").font(.system(size: 16)).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(model.activeCount) of \(model.displays.count) active")
+                        .font(.system(size: 13)).foregroundStyle(.secondary).padding(.top, 10)
+                }
+                DisplaySetupPicker(model: model)
+                if model.displays.isEmpty {
+                    ContentUnavailableView("No displays found", systemImage: "display", description: Text("Connect a display to get started."))
+                } else {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 28)], alignment: .center, spacing: 32) {
+                        ForEach(model.displays) { display in
+                            DisplayPanel(model: model, display: display)
+                        }
+                    }.padding(.vertical, 12)
+                }
+                Divider()
+                HStack(spacing: 12) {
+                    Image(systemName: "display.2").font(.system(size: 18)).foregroundStyle(.secondary)
+                    Text(model.activeDescription).font(.system(size: 14)).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Restore all", action: model.restore)
+                        .buttonStyle(.borderedProminent).controlSize(.large)
+                        .help("Reconnect displays disabled by re-sPLAY (⌃⌥⌘0)")
+                }
+            }.padding(32).frame(maxWidth: 1300).frame(maxWidth: .infinity)
+        }
+    }
+
+    private var settingsPage: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                Text("Settings").font(.system(size: 32, weight: .bold))
+                Text("Make re-sPLAY part of your everyday setup.").font(.system(size: 16)).foregroundStyle(.secondary)
+                SettingsControls(model: model)
+                if !model.shortcutErrors.isEmpty {
+                    Label(model.shortcutErrors.joined(separator: "\n"), systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 13)).foregroundStyle(.orange).textSelection(.enabled)
+                }
+                GroupBox {
+                    HStack(spacing: 16) {
+                        Image(nsImage: BrandArtwork.symbol(size: 52)).resizable().frame(width: 44, height: 44)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("re-sPLAY").font(.system(size: 17, weight: .semibold))
+                            Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.8.0")")
                                 .font(.system(size: 13)).foregroundStyle(.secondary)
                         }
-                        if model.displays.isEmpty {
-                            ContentUnavailableView("No displays found", systemImage: "display", description: Text("Connect a display to get started."))
-                        } else {
-                            LazyVGrid(columns: columns, spacing: 16) {
-                                ForEach(model.displays) { display in
-                                    DisplayCard(display: display, busy: model.busy, onlyActive: model.activeCount == 1 && display.active,
-                                                useOnly: { model.useOnly(display.id) },
-                                                toggle: { model.toggle(display.id) },
-                                                prefer: { model.prefer(display.id) },
-                                                brightness: model.brightness[display.id] ?? BrightnessState(),
-                                                setBrightness: { model.setBrightness(display.id, $0) },
-                                                retryBrightness: { model.retryBrightness(display.id) },
-                                                autoBrightness: model.autoBrightness[display.id] ?? AutoBrightnessState(),
-                                                setAutoBrightness: { model.setAutoBrightness(display.id, $0) },
-                                                retryAutoBrightness: { model.retryAutoBrightness(display.id) })
-                                }
-                            }
-                        }
-                    }
-                    preferences
-                    if !model.shortcutErrors.isEmpty {
-                        Label(model.shortcutErrors.joined(separator: "\n"), systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.orange).font(.system(size: 14)).textSelection(.enabled)
-                    }
+                        Spacer()
+                    }.padding(12)
                 }
-                .padding(.horizontal, 32).padding(.top, 24).padding(.bottom, 16)
-                .frame(maxWidth: 1120)
-                .frame(maxWidth: .infinity, alignment: .top)
-            }
-            Divider()
-            HStack(spacing: 8) {
-                Image(systemName: model.busy ? "arrow.triangle.2.circlepath" : "checkmark.circle")
-                    .foregroundStyle(model.busy ? Color.blue : Color.secondary)
-                Text(footerText).font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(2)
-                Spacer(minLength: 8)
-                Button { showHelp.toggle() } label: { Image(systemName: "questionmark.circle").font(.system(size: 14)) }
-                    .buttonStyle(.plain).help("About display switching")
-                    .accessibilityLabel("About display switching")
-                    .popover(isPresented: $showHelp) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Label("Display switching", systemImage: "display.2").font(.headline)
-                            Text("Use only this display keeps one screen active and disconnects the others from your desktop. It also sets your shortcut target.")
-                            Text("Restore all reconnects the displays turned off by re-sPLAY. Quitting the app restores them too.")
-                            Text("Disconnection requests standby. It does not cut AC power to the monitors.").foregroundStyle(.secondary)
-                        }.font(.system(size: 14)).padding(22).frame(width: 330)
-                    }
-            }.padding(.horizontal, 32).padding(.vertical, 13)
+            }.padding(32).frame(maxWidth: 820).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
-        .tint(.blue)
-    }
-
-    private var footerText: String {
-        if model.busy { return model.message }
-        if model.message.hasPrefix("Could") || model.message.contains("still active") || model.message.contains("failed") { return model.message }
-        return "re-sPLAY is ready in your menu bar."
-    }
-
-    private var header: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("re-sPLAY").font(.system(size: 30, weight: .semibold)).tracking(-0.7)
-                HStack(spacing: 7) {
-                    Circle().fill(model.busy ? Color.orange : Color.blue).frame(width: 6, height: 6)
-                    Text(model.activeDescription).font(.system(size: 14)).foregroundStyle(.secondary)
-                }.accessibilityElement(children: .combine)
-            }
-            Spacer()
-            Button(action: model.restore) {
-                Label("Restore all", systemImage: "display.2").padding(.horizontal, 4)
-            }
-            .buttonStyle(.glass).tint(.blue).controlSize(.large)
-            .help("Reconnect displays disabled by re-sPLAY (⌃⌥⌘0)")
-        }
-    }
-
-    private var preferences: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Shortcuts & startup").font(.system(size: 17, weight: .semibold))
-            VStack(spacing: 0) {
-                HStack(spacing: 14) {
-                    settingIcon("keyboard")
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Toggle a single display").font(.system(size: 14, weight: .medium))
-                        Text("Press again to restore your workspace.").font(.system(size: 13)).foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 12)
-                    Picker("Shortcut display", selection: Binding(get: { model.preferredID }, set: model.prefer)) {
-                        ForEach(model.displays) { Text($0.name).tag($0.id) }
-                    }.labelsHidden().frame(width: 196).disabled(model.busy)
-                        .accessibilityLabel("Display used by toggle shortcut")
-                    KeyCaps(key: "1")
-                }.padding(18)
-                Divider().padding(.leading, 50)
-                HStack(spacing: 14) {
-                    settingIcon("display.2")
-                    Text("Restore all displays").font(.system(size: 14, weight: .medium))
-                    Spacer()
-                    KeyCaps(key: "0")
-                }.padding(.horizontal, 16).padding(.vertical, 13)
-                Divider().padding(.leading, 50)
-                HStack(spacing: 14) {
-                    settingIcon("power")
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Launch at login").font(.system(size: 14, weight: .medium))
-                        Text(model.loginStatus == "On" || model.loginStatus == "Off" ? "Ready in the menu bar when you sign in." : model.loginStatus)
-                            .font(.system(size: 13)).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("Launch at login", isOn: Binding(get: { model.loginEnabled }, set: { _ in model.toggleLogin() }))
-                        .labelsHidden().toggleStyle(.switch).controlSize(.small)
-                }.padding(18)
-            }
-            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.primary.opacity(0.07), lineWidth: 1))
-        }
-    }
-    private func settingIcon(_ name: String) -> some View {
-        Image(systemName: name).font(.system(size: 15)).foregroundStyle(.secondary).frame(width: 20)
-            .accessibilityHidden(true)
     }
 }
 
-private struct KeyCaps: View {
+struct DisplaySetupPicker: View {
+    @ObservedObject var model: DisplayWindowModel
+    private var selected: String {
+        if model.activeCount == 1 { return model.displays.first(where: \.active)?.id ?? "" }
+        return model.activeCount == model.displays.count ? "all" : "custom"
+    }
+    var body: some View {
+        Picker("Display setup", selection: Binding(get: { selected }, set: { value in
+            if value == "all" { model.restore() }
+            else if model.displays.contains(where: { $0.id == value && $0.available }) { model.useOnly(value) }
+        })) {
+            Text("All displays").tag("all")
+            ForEach(model.displays.filter(\.available)) { Text($0.shortName).tag($0.id) }
+            if selected == "custom" { Text("Custom").tag("custom") }
+        }.pickerStyle(.segmented).labelsHidden().controlSize(.large)
+            .disabled(model.busy || model.displays.isEmpty)
+            .accessibilityLabel("Display setup")
+            .help("Use all displays or switch to a single display")
+    }
+}
+
+struct DisplayPanel: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    @State private var showInfo = false
+    var body: some View {
+        VStack(spacing: 14) {
+            DisplayIllustration(display: display).frame(height: 184)
+            HStack(spacing: 5) {
+                Spacer(minLength: 0)
+                Text(display.name).font(.system(size: 16, weight: .semibold)).lineLimit(2).multilineTextAlignment(.center)
+                Button { showInfo.toggle() } label: { Image(systemName: "info.circle").foregroundStyle(.secondary) }
+                    .buttonStyle(.plain).help("Display details").accessibilityLabel("About \(display.name)")
+                    .popover(isPresented: $showInfo) { DisplayDetails(model: model, display: display) }
+                Spacer(minLength: 0)
+            }.frame(minHeight: 28)
+            ConnectionToggle(model: model, display: display)
+            BrightnessControl(model: model, display: display)
+            if model.supportsAuto(display) { AutoBrightnessControl(model: model, display: display) }
+            else { Color.clear.frame(height: 24).accessibilityHidden(true) }
+            HStack(spacing: 10) {
+                Button("Use only this") { model.useOnly(display.id) }
+                    .buttonStyle(.bordered).frame(maxWidth: .infinity)
+                    .disabled(model.busy || !display.available || model.isOnlyActive(display))
+                    .accessibilityLabel("Use only \(display.name)")
+                PreferenceButton(model: model, display: display)
+            }
+        }.padding(.vertical, 6)
+    }
+}
+
+// Device illustrations are SwiftUI views, with original bundled wallpaper artwork.
+// They never capture the user's screen or imply live window previews.
+struct DisplayIllustration: View {
+    let display: DisplayItem
+    private static let wallpaper = Bundle.main.url(forResource: "DisplayWallpaper", withExtension: "png").flatMap { NSImage(contentsOf: $0) }
+    var body: some View {
+        GeometryReader { geometry in
+            let aspect = display.builtin ? 0.61 : 0.56
+            let baseHeight = display.builtin ? 8.0 : 31.0
+            let width = min(geometry.size.width - 8, 310.0, (geometry.size.height - baseHeight) / aspect)
+            let screenHeight = width * (display.builtin ? 0.61 : 0.56)
+            VStack(spacing: 0) {
+                ZStack(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 8).fill(Color(white: 0.075))
+                    if let wallpaper = Self.wallpaper {
+                        Image(nsImage: wallpaper).resizable().scaledToFill()
+                            .frame(width: width - 14, height: screenHeight - 14).clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                            .padding(7).opacity(display.active ? 1 : 0.20)
+                    }
+                    if display.builtin {
+                        UnevenRoundedRectangle(bottomLeadingRadius: 4, bottomTrailingRadius: 4)
+                            .fill(Color(white: 0.075)).frame(width: 28, height: 10).padding(.top, 6)
+                    }
+                    if !display.active {
+                        Image(systemName: "moon.zzz.fill").font(.system(size: 23)).foregroundStyle(.white.opacity(0.8))
+                            .frame(width: width, height: screenHeight)
+                    }
+                }.frame(width: width, height: screenHeight)
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(display.active ? brandAccent.opacity(0.8) : Color.gray.opacity(0.4), lineWidth: display.active ? 2 : 1))
+                if display.builtin {
+                    RoundedRectangle(cornerRadius: 3).fill(LinearGradient(colors: [.gray, Color(white: 0.8), .gray], startPoint: .top, endPoint: .bottom))
+                        .frame(width: width + 8, height: 8)
+                } else {
+                    Rectangle().fill(LinearGradient(colors: [Color(white: 0.35), Color(white: 0.7), Color(white: 0.5)], startPoint: .top, endPoint: .bottom))
+                        .frame(width: width * 0.13, height: 26)
+                    RoundedRectangle(cornerRadius: 2).fill(LinearGradient(colors: [Color(white: 0.8), Color(white: 0.4)], startPoint: .top, endPoint: .bottom))
+                        .frame(width: width * 0.32, height: 5)
+                }
+            }.frame(width: geometry.size.width, height: geometry.size.height, alignment: .bottom)
+        }.accessibilityHidden(true)
+    }
+}
+
+struct ConnectionToggle: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    var body: some View {
+        HStack {
+            Circle().fill(display.active ? Color.green : Color.secondary.opacity(0.5)).frame(width: 6, height: 6)
+            Text(display.active ? "Active" : display.available ? "Disconnected" : "Unavailable").font(.system(size: 13)).foregroundStyle(.secondary)
+            Spacer()
+            Toggle("Active", isOn: Binding(get: { display.active }, set: { _ in model.toggle(display.id) }))
+                .labelsHidden().toggleStyle(.switch).controlSize(.small)
+                .disabled(model.busy || !display.available || model.isOnlyActive(display))
+                .accessibilityLabel("\(display.name) active")
+                .help(model.isOnlyActive(display) ? "Keep at least one display active" : "Connect or disconnect \(display.name)")
+        }.frame(height: 24)
+    }
+}
+
+struct PreferenceButton: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    var body: some View {
+        Button { model.prefer(display.id) } label: {
+            Image(systemName: display.preferred ? "star.fill" : "star")
+                .foregroundStyle(display.preferred ? brandAccent : Color.secondary).frame(width: 25, height: 25)
+        }.buttonStyle(.plain).disabled(model.busy)
+            .accessibilityLabel("Use \(display.name) with the toggle shortcut")
+            .accessibilityValue(display.preferred ? "Selected" : "Not selected")
+            .help(display.preferred ? "Selected for ⌃⌥⌘1" : "Use with the toggle shortcut")
+    }
+}
+
+struct BrightnessControl: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    var compact = false
+    private var state: BrightnessState { model.brightness[display.id] ?? BrightnessState() }
+    private var disabled: Bool { model.busy || !display.active || state.percent == nil || model.autoBrightness[display.id]?.updating == true }
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sun.max").font(.system(size: compact ? 14 : 16)).foregroundStyle(.secondary).accessibilityHidden(true)
+            Slider(value: Binding(get: { state.percent ?? 0 }, set: { model.setBrightness(display.id, $0.rounded()) }), in: 0...100)
+                .disabled(disabled).controlSize(compact ? .small : .regular)
+                .accessibilityLabel("\(display.name) brightness")
+                .accessibilityValue(display.active ? state.percent.map { "\(Int($0.rounded())) percent" } ?? "Unavailable" : "Unavailable")
+                .accessibilityAdjustableAction { direction in
+                    guard !disabled, let value = state.percent else { return }
+                    switch direction {
+                    case .increment: model.setBrightness(display.id, min(100, value.rounded() + 1))
+                    case .decrement: model.setBrightness(display.id, max(0, value.rounded() - 1))
+                    @unknown default: break
+                    }
+                }.help(state.detail)
+            Group {
+                if !display.active {
+                    Image(systemName: "moon.zzz").foregroundStyle(.secondary).help("Reconnect to adjust brightness")
+                        .accessibilityLabel("Reconnect to adjust brightness")
+                } else if let error = state.error {
+                    Button { model.retryBrightness(display.id) } label: { Image(systemName: "arrow.clockwise").foregroundStyle(.orange) }
+                        .buttonStyle(.plain).disabled(model.busy).help(error).accessibilityLabel("Retry brightness for \(display.name)")
+                } else if let value = state.percent {
+                    Text("\(Int(value.rounded()))%").font(.system(size: compact ? 13 : 14)).monospacedDigit()
+                } else { ProgressView().controlSize(.small).accessibilityLabel("Reading brightness") }
+            }.frame(width: compact ? 35 : 40, alignment: .trailing)
+        }.frame(height: 26)
+    }
+}
+
+struct AutoBrightnessControl: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    private var state: AutoBrightnessState { model.autoBrightness[display.id] ?? AutoBrightnessState() }
+    var body: some View {
+        HStack {
+            Text("Auto brightness").font(.system(size: 13)).foregroundStyle(.secondary)
+            Spacer()
+            if state.updating { ProgressView().controlSize(.small) }
+            if let error = state.error, display.active {
+                Button { model.retryAutoBrightness(display.id) } label: { Image(systemName: "arrow.clockwise") }
+                    .buttonStyle(.plain).help(error).disabled(model.busy)
+                    .accessibilityLabel("Retry auto brightness for \(display.name)")
+            } else {
+                Toggle("Auto brightness", isOn: Binding(get: { state.enabled ?? false }, set: { model.setAutoBrightness(display.id, $0) }))
+                    .labelsHidden().toggleStyle(.switch).controlSize(.small)
+                    .disabled(model.busy || !display.active || state.enabled == nil || state.updating || model.brightness[display.id]?.updating == true)
+                    .accessibilityLabel("\(display.name) auto brightness")
+                    .accessibilityValue(!display.active || state.enabled == nil ? "Unavailable" : state.enabled == true ? "On" : "Off")
+                    .help("Turn off to keep a manually chosen brightness level")
+            }
+        }.frame(height: 24)
+    }
+}
+
+struct DisplayDetails: View {
+    @ObservedObject var model: DisplayWindowModel
+    let display: DisplayItem
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(display.name).font(.system(size: 16, weight: .semibold))
+            Text(display.active ? model.brightness[display.id]?.error ?? model.brightness[display.id]?.detail ?? "Reading brightness…" : "Reconnect this display to adjust brightness.")
+            if display.preferred { Label("Selected for ⌃⌥⌘1", systemImage: "star.fill") }
+            Divider()
+            Text("Use only this connects this display and disconnects the others. Active controls each display individually.").foregroundStyle(.secondary)
+            if model.supportsAuto(display) {
+                Text("Auto brightness lets macOS respond to ambient light. Turn it off to keep your chosen manual level.").foregroundStyle(.secondary)
+            }
+        }.font(.system(size: 13)).frame(width: 275, alignment: .leading).fixedSize(horizontal: false, vertical: true).padding(20)
+    }
+}
+
+struct SettingsControls: View {
+    @ObservedObject var model: DisplayWindowModel
+    var compact = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            GroupBox("Keyboard shortcuts") {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("Single display").font(.system(size: 14, weight: .medium))
+                        Spacer()
+                        KeyCaps(key: "1")
+                    }
+                    Picker("Shortcut display", selection: Binding(get: { model.preferredID }, set: model.prefer)) {
+                        ForEach(model.displays) { Text($0.name).tag($0.id) }
+                    }.disabled(model.busy).font(.system(size: 13))
+                    Text("Press again to restore your displays.").font(.system(size: 13)).foregroundStyle(.secondary)
+                    Divider()
+                    HStack {
+                        Text("Restore all displays").font(.system(size: 14, weight: .medium))
+                        Spacer()
+                        KeyCaps(key: "0")
+                    }
+                }.padding(compact ? 10 : 16)
+            }
+            GroupBox("Startup") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Launch at login", isOn: Binding(get: { model.loginEnabled }, set: { _ in model.toggleLogin() }))
+                        .toggleStyle(.switch).controlSize(.small).font(.system(size: 14))
+                    Text(model.loginStatus == "On" || model.loginStatus == "Off" ? "Start quietly in the menu bar when you sign in." : model.loginStatus)
+                        .font(.system(size: 13)).foregroundStyle(.secondary)
+                }.padding(compact ? 10 : 16).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+}
+
+struct KeyCaps: View {
     let key: String
     var body: some View {
-        HStack(spacing: 3) {
-            ForEach(["⌃", "⌥", "⌘", key], id: \.self) { value in
-                Text(value).font(.system(size: 13, weight: .medium, design: .monospaced))
-                    .frame(width: 25, height: 27)
-                    .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 5))
-                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
-            }
-        }.foregroundStyle(.secondary)
-            .accessibilityElement(children: .ignore)
+        Text("⌃ ⌥ ⌘ \(key)").font(.system(size: 13, weight: .medium, design: .monospaced))
+            .foregroundStyle(.secondary).padding(.horizontal, 8).padding(.vertical, 4)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 5))
             .accessibilityLabel("Control Option Command \(key)")
     }
 }
 
-private struct DisplayCard: View {
-    let display: DisplayItem
-    let busy: Bool
-    let onlyActive: Bool
-    let useOnly: () -> Void
-    let toggle: () -> Void
-    let prefer: () -> Void
-    let brightness: BrightnessState
-    let setBrightness: (Double) -> Void
-    let retryBrightness: () -> Void
-    let autoBrightness: AutoBrightnessState
-    let setAutoBrightness: (Bool) -> Void
-    let retryAutoBrightness: () -> Void
-    @Environment(\.colorScheme) private var scheme
-    @State private var showInfo = false
-
-    private var connection: String { display.active ? "Active" : display.available ? "Disconnected" : "Unavailable" }
-    private var hasAutoBrightness: Bool { display.name.hasPrefix("Studio Display") || display.builtin || autoBrightness.enabled != nil }
-
+struct SwitchingHelp: View {
     var body: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 8) {
-                Image(systemName: display.active ? "checkmark.circle.fill" : "circle.dashed")
-                    .font(.system(size: 15))
-                    .foregroundStyle(display.active ? Color.blue : Color.secondary)
-                    .help(connection).accessibilityLabel("\(display.name): \(connection)")
-                Spacer()
-                Button { showInfo.toggle() } label: {
-                    Image(systemName: "info.circle").font(.system(size: 15))
-                        .frame(width: 28, height: 28).contentShape(Rectangle())
-                }.buttonStyle(.plain).foregroundStyle(.secondary)
-                    .help("Display details").accessibilityLabel("About \(display.name)")
-                    .popover(isPresented: $showInfo) { displayInfo }
-                Button(action: prefer) {
-                    Image(systemName: display.preferred ? "star.fill" : "star")
-                        .font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
-                        .foregroundStyle(display.preferred ? Color.blue : Color.secondary)
-                }.buttonStyle(.plain).disabled(busy)
-                    .help(display.preferred ? "Used by ⌃⌥⌘1" : "Use with the toggle shortcut")
-                    .accessibilityLabel("Use \(display.name) with the toggle shortcut")
-                    .accessibilityValue(display.preferred ? "Selected" : "Not selected")
-            }
-
-            VStack(spacing: 12) {
-                Image(systemName: display.builtin ? "laptopcomputer" : "display")
-                    .font(.system(size: 64, weight: .light))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(display.active ? (display.preferred ? Color.blue : Color.secondary) : Color.secondary.opacity(0.45))
-                    .scaleEffect(x: display.name.contains("ASUS") ? 1.13 : 1, y: 1)
-                    .frame(height: 72).accessibilityHidden(true)
-                Text(display.name).font(.system(size: 17, weight: .semibold))
-                    .multilineTextAlignment(.center).lineLimit(2)
-                    .frame(maxWidth: .infinity)
-            }.padding(.bottom, 4)
-
-            VStack(spacing: 16) {
-                brightnessControl
-                if hasAutoBrightness {
-                    autoBrightnessControl
-                } else {
-                    // Keep shared controls aligned without repeating an implied manual mode.
-                    Color.clear.frame(height: 28).accessibilityHidden(true)
-                }
-            }
-
-            HStack(spacing: 8) {
-                Button(action: useOnly) {
-                    Text(onlyActive ? "Only display in use" : "Use only this")
-                        .font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity)
-                }.buttonStyle(WorkspaceButtonStyle())
-                    .disabled(busy || !display.available || onlyActive)
-                    .help("Use only \(display.name) and make it the shortcut target")
-                    .accessibilityLabel("Use only \(display.name)")
-                Button(action: toggle) {
-                    Image(systemName: "power").font(.system(size: 15))
-                }.buttonStyle(WorkspaceButtonStyle())
-                    .disabled(busy || !display.available || onlyActive)
-                    .help(display.active ? "Disconnect \(display.name)" : "Reconnect \(display.name)")
-                    .accessibilityLabel("\(display.active ? "Disconnect" : "Reconnect") \(display.name)")
-            }
-        }
-        .padding(20)
-        .background(scheme == .dark ? Color(nsColor: NSColor(white: 0.15, alpha: 1)) : Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(display.preferred ? Color.blue.opacity(scheme == .dark ? 0.5 : 0.35) : Color.primary.opacity(0.08), lineWidth: 1))
-    }
-
-    private var displayInfo: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(display.name).font(.system(size: 17, weight: .semibold))
-            Label(connection, systemImage: display.active ? "checkmark.circle" : "circle.dashed")
-            if display.preferred { Label("Selected for ⌃⌥⌘1", systemImage: "star.fill") }
-            Divider()
-            Text(display.active ? brightness.error ?? brightness.detail : "Reconnect this display to adjust brightness.").fixedSize(horizontal: false, vertical: true)
-            if hasAutoBrightness {
-                Text(autoBrightness.error ?? "Auto brightness lets macOS adjust this display to ambient light. Turn it off to keep your chosen level.").fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text("This display uses manual brightness. macOS auto brightness isn’t available.").fixedSize(horizontal: false, vertical: true)
-            }
-            Text("Use only this keeps this display active and disconnects the others. The power button connects or disconnects just this display.")
-                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        }.font(.system(size: 14)).frame(width: 296, alignment: .leading).fixedSize(horizontal: false, vertical: true).padding(22)
-    }
-
-    private var autoBrightnessControl: some View {
-        HStack(spacing: 8) {
-            Text("Auto brightness").font(.system(size: 14))
-            Spacer(minLength: 8)
-            if autoBrightness.updating {
-                ProgressView().controlSize(.small).accessibilityLabel("Updating auto brightness")
-            }
-            if autoBrightness.error != nil && display.active {
-                Button(action: retryAutoBrightness) { Image(systemName: "arrow.clockwise") }
-                    .buttonStyle(.plain).frame(width: 28, height: 28)
-                    .help(autoBrightness.error ?? "Retry")
-                    .accessibilityLabel("Retry auto brightness for \(display.name)").disabled(busy)
-            } else {
-                Toggle("Auto brightness", isOn: Binding(get: { autoBrightness.enabled ?? false }, set: setAutoBrightness))
-                    .labelsHidden().toggleStyle(.switch).controlSize(.small)
-                    .disabled(busy || !display.active || autoBrightness.enabled == nil || autoBrightness.updating || brightness.updating)
-                    .accessibilityLabel("\(display.name) auto brightness")
-                    .accessibilityValue(!display.active || autoBrightness.enabled == nil ? "Unavailable" : autoBrightness.enabled == true ? "On" : "Off")
-                    .help("Adjust brightness with ambient light. Turn off to keep your chosen manual level.")
-            }
-        }.frame(height: 28)
-    }
-
-    private var brightnessControl: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "sun.max").font(.system(size: 16)).foregroundStyle(.secondary)
-                .help("Brightness").accessibilityHidden(true)
-            // A stepped SwiftUI slider draws a dense row of tick marks on macOS.
-            // Keep the native track continuous and round only the requested brightness.
-            Slider(value: Binding(get: { brightness.percent ?? 0 }, set: { setBrightness($0.rounded()) }), in: 0...100)
-                .controlSize(.regular)
-                .disabled(busy || !display.active || brightness.percent == nil || autoBrightness.updating)
-                .accessibilityAdjustableAction { direction in
-                    guard !busy, display.active, !autoBrightness.updating, let value = brightness.percent else { return }
-                    switch direction {
-                    case .increment: setBrightness(min(100, value.rounded() + 1))
-                    case .decrement: setBrightness(max(0, value.rounded() - 1))
-                    @unknown default: break
-                    }
-                }
-                .help(brightness.detail + ". Adjust this monitor independently.")
-                .accessibilityLabel("\(display.name) brightness")
-                .accessibilityValue(!display.active ? "Unavailable" : brightness.percent.map { "\(Int($0.rounded())) percent" } ?? "Unavailable")
-            Group {
-                if !display.active {
-                    Image(systemName: "moon.zzz").foregroundStyle(.secondary)
-                        .help("Reconnect to adjust brightness").accessibilityLabel("Reconnect to adjust brightness")
-                } else if brightness.error != nil {
-                    Button(action: retryBrightness) { Image(systemName: "arrow.clockwise") }
-                        .buttonStyle(.plain).foregroundStyle(.orange)
-                        .help(brightness.error ?? "Retry brightness")
-                        .disabled(busy).accessibilityLabel("Retry brightness for \(display.name)")
-                } else if let percent = brightness.percent {
-                    Text("\(Int(percent.rounded()))%")
-                        .font(.system(size: 17, weight: .medium)).monospacedDigit()
-                } else {
-                    ProgressView().controlSize(.small).accessibilityLabel("Reading brightness")
-                }
-            }.frame(width: 48, height: 28, alignment: .trailing)
-        }.frame(height: 28)
-    }
-}
-
-// Semantic colors keep secondary actions legible in both appearances.
-private struct WorkspaceButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        WorkspaceButtonSurface(configuration: configuration)
-    }
-}
-private struct WorkspaceButtonSurface: View {
-    let configuration: ButtonStyle.Configuration
-    @Environment(\.isEnabled) private var enabled
-    @State private var hovered = false
-    var body: some View {
-        configuration.label
-            .foregroundStyle(enabled ? Color.primary : Color.secondary)
-            .padding(.horizontal, 14)
-            .frame(minHeight: 36)
-            .background(Color.primary.opacity(enabled && configuration.isPressed ? 0.16 : enabled && hovered ? 0.11 : 0.065), in: Capsule())
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(enabled ? 0.15 : 0.07), lineWidth: 1))
-            .contentShape(Capsule())
-            .onHover { hovered = $0 }
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Display switching", systemImage: "display.2").font(.system(size: 16, weight: .semibold))
+            Text("Choose one display to focus on, or keep multiple displays active. At least one screen always stays connected.")
+            Text("Restore all reconnects displays disabled by re-sPLAY. Quitting normally restores them too.")
+            Text("Disconnection requests standby; it does not cut AC power. Monitor previews use illustrative wallpaper, not live screen captures.").foregroundStyle(.secondary)
+        }.font(.system(size: 13)).frame(width: 300, alignment: .leading).fixedSize(horizontal: false, vertical: true).padding(22)
     }
 }

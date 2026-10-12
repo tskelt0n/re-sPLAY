@@ -18,6 +18,15 @@ Functional checks were performed during development on October 12, 2026, with ma
 
 Earlier DDC tests confirmed changes to the ASUS luminance register, but those readbacks did **not** establish visible brightness changes in HDR. Native macOS brightness is the verified path for that configuration. No physical luminance or power measurements were made.
 
+## Version 0.8.0 redesign checks
+
+- Compiled the native sidebar window, tabbed menu-bar popover, and shared return-frame branding. Verified strict ad-hoc signatures on the packaged and installed app.
+- Inspected the main window in light and dark appearance with all three displays active, their brightness controls visible, and both Studio auto-brightness toggles Off. Saved actual app captures for the README.
+- Opened Quick Controls with Command–Shift–D and inspected the compact three-display view. The user physically confirmed that the Displays and Settings tabs, expanded display rows, and brightness controls work.
+- Automated inspection of some Settings/expanded views crashed Codex's `SkyComputerUseService`; no corresponding re-sPLAY crash was observed. The user's physical check supplements automation for those views.
+- Checked the last-display guard and launch-at-login status. The installed copy follows the system appearance and retains the existing bundle identifier, preferences, and login registration.
+- The display-switching engine and native HDR/DDC brightness implementation are unchanged. Workspace recall is intentionally deferred. A full hardware regression cycle and minimum-window-size rendering check were not repeated for this UI change.
+
 ## Build checks
 
 ```sh
@@ -45,7 +54,8 @@ Save the current display arrangement, brightness levels, and auto-brightness pre
 4. Change each display’s brightness independently. Check the visible result and fresh readback, rather than relying only on an acknowledged DDC write.
 5. With ASUS HDR enabled, compare the app and System Settings brightness sliders in both directions. Confirm HDR stays enabled and the picture visibly changes.
 6. Toggle each supported auto-brightness control and verify the other display’s preference remains unchanged. With it Off, confirm manual brightness holds.
-7. Check controls while a display is disconnected and after restoring it. Inspect light/dark appearances and window resizing for clipping or inaccessible controls.
+7. Open the menu-bar popover, switch between Displays and Settings, and expand each display row. Check brightness, auto brightness where supported, shortcut selection, and the last-display guard in both surfaces.
+8. Check controls while a display is disconnected and after restoring it. Inspect light/dark appearances and window resizing for clipping or inaccessible controls.
 
 ## Limits
 
