@@ -6,7 +6,7 @@ Updated October 12, 2026 using the built-in image-generation tool, with the real
 
 ## Source assets
 
-- `app-dark.png`: unedited 0.8.4 main window, sidebar open.
+- `app-dark.png`: unedited 0.8.5 main window with the larger sidebar open (updated after banner generation).
 - `sidebar-collapsed.png`: unedited 0.8.4 main window with sidebar collapsed.
 - `app-light.png`: earlier 0.8.0 light appearance capture.
 - `quick-controls.png`: earlier 0.8.0 light menu-bar popover capture.

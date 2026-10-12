@@ -70,19 +70,40 @@ struct DisplayWindow: View {
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    Image(nsImage: BrandArtwork.symbol(size: 40))
+                        .resizable().frame(width: 36, height: 36)
+                        .accessibilityHidden(true)
+                    Text("re-sPLAY").font(.system(size: 21, weight: .semibold)).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 22).padding(.top, 24).padding(.bottom, 24)
+
                 List(selection: $model.section) {
                     ForEach(AppSection.allCases) { section in
-                        Label(section.rawValue, systemImage: section.icon).tag(section)
-                            .font(.system(size: 14, weight: .medium)).padding(.vertical, 5)
+                        HStack(spacing: 14) {
+                            Image(systemName: section.icon)
+                                .font(.system(size: 21, weight: .regular))
+                                .frame(width: 28).accessibilityHidden(true)
+                            Text(section.rawValue).font(.system(size: 17, weight: .medium))
+                            Spacer(minLength: 0)
+                        }
+                        .frame(minHeight: 48)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .tag(section)
                     }
                 }.listStyle(.sidebar)
+
                 HStack(spacing: 10) {
-                    Image(nsImage: BrandArtwork.symbol()).resizable().frame(width: 27, height: 27)
-                    Text("re-sPLAY").font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                    Spacer()
-                }.padding(20)
-            }.frame(minWidth: 180, idealWidth: 194, maxWidth: 230)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 194, max: 230)
+                    Circle().fill(model.busy ? Color.orange : Color.green)
+                        .frame(width: 7, height: 7).accessibilityHidden(true)
+                    Text(model.activeDescription)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary).lineLimit(2)
+                    Spacer(minLength: 0)
+                }.padding(.horizontal, 24).padding(.vertical, 24)
+            }.frame(minWidth: 220, idealWidth: 240, maxWidth: 280)
+                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
                 .toolbar(removing: .sidebarToggle)
         } detail: {
             VStack(spacing: 0) {

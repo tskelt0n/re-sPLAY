@@ -55,6 +55,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Compared installed app captures across a 25-second interval: segment boundaries and the control's origin remained unchanged. Inspected both sidebar states and the menu-bar control. Clicking All displays confirmed the native action invokes restoration and disables segments during the transition.
 - Retained the capsule appearance and purple selection. Control spacing and monitor artwork are unchanged. Compilation and installed signature verification passed.
 
+## Version 0.8.5 sidebar readability
+
+- Enlarged sidebar navigation to 17-point labels and 21-point icons, with taller rows and a 220-point minimum sidebar width.
+- Moved the brand to a prominent top header, using a 36-point symbol and 21-point product name. Added current display status at the bottom.
+- Inspected the installed window: labels fit, all three monitor columns remain visible, and sidebar collapse/reopen works. Captured the updated dark window for the README. Settings content was not retested; navigation selection wiring is unchanged.
+- Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. Display settings were unchanged.
+
 ## Build checks
 
 ```sh
