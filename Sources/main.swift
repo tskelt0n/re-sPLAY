@@ -244,8 +244,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .hidden
         window.minSize = NSSize(width: 860, height: 640)
         window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
+        window.backgroundColor = .windowBackgroundColor
         window.toolbarStyle = .unified
         window.toolbar = NSToolbar(identifier: "re-sPLAY.MainToolbar")
+        // Preserve the outer frame when extending the content behind window chrome.
+        window.styleMask.insert(.fullSizeContentView)
         window.setFrameAutosaveName("DisplaySwitchMainWindow")
         // Give the new controls room once; subsequent launches honor the saved size.
         if !engine.defaults.bool(forKey: "nativeLayoutExpanded") {
@@ -275,6 +279,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowModel.retryBrightness = { [weak self] id in self?.brightness.refresh(id) }
         window.contentView = NSHostingView(rootView: DisplayWindow(model: windowModel))
+        let sidebarAccessory = NSTitlebarAccessoryViewController()
+        sidebarAccessory.layoutAttribute = .left
+        let sidebarControl = NSHostingView(rootView: WindowSidebarToggle(model: windowModel).ignoresSafeArea())
+        sidebarControl.sizingOptions = []
+        sidebarAccessory.view = sidebarControl
+        sidebarAccessory.view.frame.size = NSSize(width: 48, height: 20)
+        window.addTitlebarAccessoryViewController(sidebarAccessory)
         popover.behavior = .transient
         popover.animates = true
         let popoverController = NSHostingController(rootView: MenuPopover(model: windowModel,

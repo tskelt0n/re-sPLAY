@@ -27,6 +27,7 @@ struct DisplayItem: Identifiable {
 
 final class DisplayWindowModel: ObservableObject {
     @Published var section: AppSection = .displays
+    @Published var columnVisibility: NavigationSplitViewVisibility = .all
     @Published var displays: [DisplayItem] = []
     @Published var autoBrightness: [String: AutoBrightnessState] = [:]
     var setAutoBrightness: (String, Bool) -> Void = { _, _ in }
@@ -63,14 +64,33 @@ final class DisplayWindowModel: ObservableObject {
     }
 }
 
+// A titlebar accessory keeps this control beside the traffic lights regardless of
+// NavigationSplitView's automatic toolbar spacing or sidebar visibility.
+struct WindowSidebarToggle: View {
+    @ObservedObject var model: DisplayWindowModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Button {
+            withAnimation(reduceMotion ? nil : .smooth(duration: 0.32, extraBounce: 0)) {
+                model.columnVisibility = model.columnVisibility == .detailOnly ? .all : .detailOnly
+            }
+        } label: {
+            Image(systemName: "sidebar.left").font(.system(size: 16))
+                .frame(width: 28, height: 28)
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .help(model.columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
+        .accessibilityLabel(model.columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
+        .frame(width: 48, height: 20)
+    }
+}
+
 struct DisplayWindow: View {
     @ObservedObject var model: DisplayWindowModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showHelp = false
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    private var sidebarAnimation: Animation? {
-        reduceMotion ? nil : .smooth(duration: 0.32, extraBounce: 0)
-    }
     private var pageAnimation: Animation {
         .easeInOut(duration: reduceMotion ? 0.12 : 0.24)
     }
@@ -80,7 +100,7 @@ struct DisplayWindow: View {
             removal: .opacity)
     }
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationSplitView(columnVisibility: $model.columnVisibility) {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
                     Image(nsImage: BrandArtwork.symbol(size: 40))
@@ -161,22 +181,10 @@ struct DisplayWindow: View {
                         .accessibilityLabel("About display switching")
                         .popover(isPresented: $showHelp) { SwitchingHelp() }
                 }.padding(.horizontal, 28).padding(.vertical, 15)
-            }.background(Color(nsColor: .windowBackgroundColor))
+            }.background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
         }
         .toolbar(removing: .sidebarToggle)
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button {
-                    withAnimation(sidebarAnimation) {
-                        columnVisibility = columnVisibility == .detailOnly ? .all : .detailOnly
-                    }
-                } label: {
-                    Image(systemName: "sidebar.left")
-                }
-                .help(columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
-                .accessibilityLabel(columnVisibility == .detailOnly ? "Show sidebar" : "Hide sidebar")
-            }
-        }
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         .tint(brandAccent)
     }
 

@@ -82,6 +82,13 @@ Earlier DDC tests confirmed changes to the ASUS luminance register, but those re
 - Visually inspected the installed Displays selection and saved the updated screenshot. The selected background remains flush and uses the same semantic color as the main pane.
 - Compilation, installed strict signature verification, archive integrity, and whitespace checks passed. Navigation behavior and display settings are unchanged.
 
+## Version 0.8.9 seamless window chrome
+
+- Extended the sidebar and detail backgrounds through a transparent titlebar and removed its separator and toolbar backdrop. Native traffic lights, window dragging, and resizing remain provided by AppKit.
+- Moved the sidebar toggle into a native titlebar accessory so its horizontal position stays fixed beside the traffic lights. It retains the existing smooth animation and Reduce Motion behavior.
+- Inspected the installed dark window in both sidebar states: no contrasting top strip, the toggle remains in place, and monitor previews expand when collapsed. Resized the window vertically and confirmed all controls fit at 1120 × 832 points; shorter windows scroll the content. Saved both preview captures.
+- Compilation, shell syntax, installed strict signature verification, ZIP integrity, and whitespace checks passed. Settings, light appearance, fullscreen, and Reduce Motion were not retested in this pass. No monitor settings were changed.
+
 ## Build checks
 
 ```sh

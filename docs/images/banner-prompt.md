@@ -6,8 +6,8 @@ Updated October 12, 2026 using the built-in image-generation tool, with the real
 
 ## Source assets
 
-- `app-dark.png`: unedited 0.8.8 main window with rounded inside corners at the sidebar selection (updated after banner generation).
-- `sidebar-collapsed.png`: unedited 0.8.4 main window with sidebar collapsed.
+- `app-dark.png`: unedited 0.8.9 main window with transparent titlebar and continuous sidebar/detail backgrounds (updated after banner generation).
+- `sidebar-collapsed.png`: unedited 0.8.9 main window with sidebar collapsed (updated after banner generation).
 - `app-light.png`: earlier 0.8.0 light appearance capture.
 - `quick-controls.png`: earlier 0.8.0 light menu-bar popover capture.
 - `../brand/re-splay-symbol.png`: authoritative purple return-frame symbol.
